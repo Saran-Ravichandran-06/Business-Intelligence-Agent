@@ -34,20 +34,20 @@ The **AI Business Intelligence Analyst** is a complete, end-to-end data analytic
 
 The BI pipeline uses a hybrid approach: AI for natural language understanding and insight generation, and deterministic code for all mathematical computations to guarantee accuracy.
 
-```mermaid
-flowchart LR
-    A[User Query] --> B[Query Understanding - Phi-3 / Regex]
-    B --> C[Analytics Engine - Pandas]
-    C --> D[Insight Generator - Phi-3]
-    D --> E[Unified Agent Response]
-    E --> F[Ask Agent Workspace UI]
+```text
+User Query
+ └── Query Understanding (Phi-3 / Regex)
+      └── Analytics Engine (Pandas)
+           └── Insight Generator (Phi-3)
+                └── Unified Agent Response
+                     └── Ask Agent Workspace UI
 
-    U[CSV Upload] --> V[Dataset Store]
-    V --> C
-    V --> G[Dashboard Analytics]
-    C --> H[Report Service]
-    D --> H
-    H --> I[PDF/CSV Export]
+CSV Upload
+ └── Dataset Store
+      ├── Dashboard Analytics
+      └── Analytics Engine
+           └── Report Service
+                └── PDF/CSV Export
 ```
 
 ## 🛠️ Getting Started
