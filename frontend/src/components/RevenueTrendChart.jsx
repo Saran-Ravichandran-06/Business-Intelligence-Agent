@@ -21,13 +21,18 @@ function RevenueTrendChart({ points, isLoading }) {
 
   return (
     <div className="card">
-      <h3 className="card-title">Revenue Trend</h3>
+      <div className="card-header">
+        <div>
+          <h3 className="card-title">Revenue Trend</h3>
+          <p className="card-subtitle">7-day rolling average</p>
+        </div>
+      </div>
       <div className="chart">
         {points.map((point) => {
           const height = (point.revenue / maxRevenue) * 100
           return (
             <div key={point.date} className="chart-column">
-              <div className="chart-bar" style={{ height: `${height}%` }} />
+              <div className="chart-bar" style={{ height: `${height}%` }} title={`${point.date}: $${point.revenue}`} />
               <span className="chart-label">{point.date}</span>
             </div>
           )

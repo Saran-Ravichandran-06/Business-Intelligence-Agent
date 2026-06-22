@@ -21,16 +21,22 @@ function RegionPerformanceChart({ regions, isLoading }) {
 
   return (
     <div className="card">
-      <h3 className="card-title">Revenue by Region</h3>
+      <div className="card-header">
+        <div>
+          <h3 className="card-title">Revenue by Region</h3>
+          <p className="card-subtitle">Comparative performance</p>
+        </div>
+      </div>
       <div className="chart-horizontal">
-        {regions.map((region) => {
+        {regions.map((region, idx) => {
           const width = (region.revenue / maxRevenue) * 100
           return (
             <div key={region.region} className="chart-row">
               <span className="chart-label">{region.region}</span>
               <div className="chart-bar-wrapper">
-                <div className="chart-bar-horizontal region" style={{ width: `${width}%` }} />
+                <div className="chart-bar-horizontal region" style={{ width: `${width}%` }} title={`${region.region}: $${region.revenue}`} />
               </div>
+              <span className="chart-value">${region.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </div>
           )
         })}

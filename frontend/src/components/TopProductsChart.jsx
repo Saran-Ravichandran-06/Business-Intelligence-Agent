@@ -21,16 +21,22 @@ function TopProductsChart({ items, isLoading }) {
 
   return (
     <div className="card">
-      <h3 className="card-title">Top Products by Revenue</h3>
+      <div className="card-header">
+        <div>
+          <h3 className="card-title">Top Products by Revenue</h3>
+          <p className="card-subtitle">Best performers</p>
+        </div>
+      </div>
       <div className="chart-horizontal">
-        {items.map((item) => {
+        {items.map((item, idx) => {
           const width = (item.revenue / maxRevenue) * 100
           return (
             <div key={item.product} className="chart-row">
               <span className="chart-label">{item.product}</span>
               <div className="chart-bar-wrapper">
-                <div className="chart-bar-horizontal" style={{ width: `${width}%` }} />
+                <div className="chart-bar-horizontal" style={{ width: `${width}%` }} title={`${item.product}: $${item.revenue}`} />
               </div>
+              <span className="chart-value">${item.revenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </div>
           )
         })}
