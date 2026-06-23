@@ -844,7 +844,7 @@ body {
 /* ===== MODERN DASHBOARD STYLES ===== */
 
 .dashboard-section {
-  padding: 0;
+  padding: 32px;
   max-width: 100%;
   margin: 0;
   width: 100%;
@@ -1082,6 +1082,104 @@ body {
   max-width: 100%;
 }
 
+/* Revenue Trend Card with Controls */
+.revenue-trend-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.trend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.trend-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trend-controls {
+  display: flex;
+  gap: 24px;
+  align-items: flex-end;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.button-group {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.btn-interval {
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-interval:hover {
+  color: #0f172a;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn-interval.active {
+  background: #ffffff;
+  color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.time-range-select {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.time-range-select:hover {
+  border-color: #94a3b8;
+}
+
+.time-range-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.trend-chart {
+  width: 100%;
+}
+
 /* AI Highlights Card */
 .ai-highlights-card {
   padding: 20px;
@@ -1316,6 +1414,28 @@ body {
     justify-content: flex-start;
     width: 100%;
   }
+
+  .trend-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .trend-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .control-group {
+    width: 100%;
+  }
+
+  .button-group {
+    width: 100%;
+  }
+
+  .time-range-select {
+    width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1339,12 +1459,17 @@ body {
     flex-direction: column;
     gap: 12px;
   }
+
+  .trend-controls {
+    flex-direction: column;
+    width: 100%;
+  }
 }
 
 /* ===== MODERN UPLOAD PAGE STYLES ===== */
 
 .upload-section {
-  padding: 0;
+  padding: 32px;
   max-width: 100%;
   margin: 0;
   width: 100%;
@@ -2670,7 +2795,7 @@ body {
   display: grid;
   grid-template-columns: 320px 1fr;
   gap: 24px;
-  padding: 0;
+  padding: 32px;
   flex: 1;
   overflow-y: auto;
 }
