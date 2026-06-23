@@ -94,12 +94,3 @@ function ReportsPage() {
 }
 
 export default ReportsPage
-        </div>
-      </div>
-
-      {error ? <p className="error-text">{error}</p> : null}
-    </section>
-  )
-}
-
-export default ReportsPage
