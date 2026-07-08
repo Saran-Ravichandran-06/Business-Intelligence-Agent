@@ -1,4 +1,15 @@
-function ReportBuilder({ onGenerate, isLoading, reportType, onTypeChange }) {
+import { useState } from 'react'
+
+function ReportBuilder({ onGenerate, isLoading, reportType, onTypeChange, isHistoryOpen, onToggleHistory }) {
+  const [options, setOptions] = useState({
+    charts: true,
+    insights: true,
+    forecast: true,
+  })
+
+  const toggleOption = (key) => {
+    setOptions(prev => ({ ...prev, [key]: !prev[key] }))
+  }
   const reportTypes = [
     {
       id: 'monthly',
@@ -27,45 +38,46 @@ function ReportBuilder({ onGenerate, isLoading, reportType, onTypeChange }) {
         <p className="builder-subtitle">Create executive reports instantly</p>
       </div>
 
-      <div className="report-types-grid">
-        {reportTypes.map((type) => (
+      <div className="report-types-container">
+        <h4 className="options-title">Report Type</h4>
+        <div className="report-types-grid">
+          {reportTypes.map((type) => (
           <button
             key={type.id}
             className={`report-type-card ${reportType === type.id ? 'active' : ''}`}
             onClick={() => onTypeChange(type.id)}
           >
             <span className="type-icon">{type.icon}</span>
-            <h4 className="type-label">{type.label}</h4>
-            <p className="type-description">{type.description}</p>
+            <div className="type-content">
+              <h4 className="type-label">{type.label}</h4>
+              <p className="type-description">{type.description}</p>
+            </div>
           </button>
         ))}
+      </div>
       </div>
 
       <div className="report-options">
         <h4 className="options-title">Report Options</h4>
-        <div className="option-item">
-          <input
-            type="checkbox"
-            id="include-charts"
-            defaultChecked={true}
-          />
-          <label htmlFor="include-charts">Include Charts</label>
-        </div>
-        <div className="option-item">
-          <input
-            type="checkbox"
-            id="include-insights"
-            defaultChecked={true}
-          />
-          <label htmlFor="include-insights">Include AI Insights</label>
-        </div>
-        <div className="option-item">
-          <input
-            type="checkbox"
-            id="include-forecast"
-            defaultChecked={true}
-          />
-          <label htmlFor="include-forecast">Include Forecast</label>
+        <div className="options-buttons">
+          <button
+            className={`option-btn ${options.charts ? 'active' : ''}`}
+            onClick={() => toggleOption('charts')}
+          >
+            Include Charts
+          </button>
+          <button
+            className={`option-btn ${options.insights ? 'active' : ''}`}
+            onClick={() => toggleOption('insights')}
+          >
+            Include AI Insights
+          </button>
+          <button
+            className={`option-btn ${options.forecast ? 'active' : ''}`}
+            onClick={() => toggleOption('forecast')}
+          >
+            Include Forecast
+          </button>
         </div>
       </div>
 
@@ -85,6 +97,14 @@ function ReportBuilder({ onGenerate, isLoading, reportType, onTypeChange }) {
             Generate Report
           </>
         )}
+      </button>
+
+      <button
+        className={`history-toggle-btn ${isHistoryOpen ? 'active' : ''}`}
+        onClick={onToggleHistory}
+      >
+        <span className="icon">🕒</span>
+        {isHistoryOpen ? 'Close History' : 'Report History'}
       </button>
     </div>
   )
