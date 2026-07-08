@@ -58,8 +58,11 @@ body {
 }
 
 .sidebar-header {
-  padding: 20px 16px;
+  height: 80px;
+  padding: 0 16px;
   border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
 }
 
 .sidebar-logo {
@@ -3378,8 +3381,9 @@ body {
 /* The workspace container */
 .agent-workspace {
   display: flex;
-  height: 100vh;
-  width: 100%;
+  height: calc(100vh - 80px);
+  width: calc(100% + 64px);
+  margin: -32px;
   background-color: #f8fafc;
   overflow: hidden;
 }

@@ -12,10 +12,9 @@ function Sidebar() {
     <aside className="modern-sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <span className="logo-icon">🔍</span>
           <div className="logo-text">
-            <h1 className="logo-title">BI Agent</h1>
-            <p className="logo-subtitle">Analytics</p>
+            <h1 className="logo-title">InsightIQ</h1>
+            <p className="logo-subtitle">Business Intelligence Agent</p>
           </div>
         </div>
       </div>
@@ -32,7 +31,6 @@ function Sidebar() {
           >
             <span className="nav-icon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
-            {item.to === '/' && <div className="nav-accent-bar"></div>}
           </NavLink>
         ))}
       </nav>
