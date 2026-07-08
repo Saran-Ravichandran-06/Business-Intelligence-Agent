@@ -35,8 +35,10 @@ function ReportBuilder({ onGenerate, isLoading, reportType, onTypeChange }) {
             onClick={() => onTypeChange(type.id)}
           >
             <span className="type-icon">{type.icon}</span>
-            <h4 className="type-label">{type.label}</h4>
-            <p className="type-description">{type.description}</p>
+            <div className="type-content">
+              <h4 className="type-label">{type.label}</h4>
+              <p className="type-description">{type.description}</p>
+            </div>
           </button>
         ))}
       </div>

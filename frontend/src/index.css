@@ -2850,10 +2850,10 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  gap: 16px;
   align-items: center;
-  text-align: center;
+  text-align: left;
 }
 
 .report-type-card:hover {
@@ -2868,8 +2868,17 @@ body {
 }
 
 .type-icon {
-  font-size: 28px;
-  display: block;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.type-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .type-label {
