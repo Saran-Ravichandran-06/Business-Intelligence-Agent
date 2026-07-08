@@ -2760,10 +2760,13 @@ body {
 /* ===== REPORTS CENTER STYLES ===== */
 
 .reports-center {
-  padding: 0;
-  background: transparent;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  height: calc(100vh - 80px);
+  width: calc(100% + 64px);
+  margin: -32px;
+  background-color: #f8fafc;
+  overflow: hidden;
 }
 
 .reports-header {
@@ -2794,27 +2797,40 @@ body {
   font-size: 13px;
 }
 
-.reports-main {
-  display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 24px;
-  padding: 32px;
-  flex: 1;
+.reports-sidebar {
+  width: 320px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.reports-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 32px;
+  gap: 24px;
+}
+
+.reports-main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 /* Report Builder Panel */
 .report-builder-panel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  height: fit-content;
-  position: sticky;
-  top: 24px;
+  background: transparent;
+  border: none;
 }
 
 .builder-header {
@@ -2836,6 +2852,12 @@ body {
   color: #64748b;
 }
 
+.report-types-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .report-types-grid {
   display: flex;
   flex-direction: column;
@@ -2843,7 +2865,7 @@ body {
 }
 
 .report-type-card {
-  padding: 14px;
+  padding: 10px 14px;
   background: #f8fafc;
   border: 2px solid #e2e8f0;
   border-radius: 10px;
@@ -2895,9 +2917,6 @@ body {
 }
 
 .report-options {
-  padding: 16px;
-  background: #f8fafc;
-  border-radius: 10px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -2912,50 +2931,96 @@ body {
   font-weight: 700;
 }
 
-.option-item {
+.options-buttons {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
 }
 
-.option-item input[type='checkbox'] {
-  width: 16px;
-  height: 16px;
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
   cursor: pointer;
-  accent-color: #3b82f6;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  text-align: left;
 }
 
-.option-item label {
-  font-size: 12px;
-  color: #475569;
-  cursor: pointer;
-  font-weight: 500;
+.option-btn:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+.option-btn.active {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .generate-button {
   padding: 12px 16px;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   border: none;
-  border-radius: 10px;
   color: #ffffff;
-  font-weight: 700;
-  font-size: 13px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
 .generate-button:hover:not(:disabled) {
-  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
 }
 
 .generate-button:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
+}
+
+.history-toggle-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #62c897, #31a579);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(202, 138, 4, 0.2);
+}
+
+.history-toggle-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(202, 138, 4, 0.3);
+}
+
+.history-toggle-btn.active {
+  background: linear-gradient(135deg, #82e2b5, #59e6ae);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
 }
 
 .spinner {

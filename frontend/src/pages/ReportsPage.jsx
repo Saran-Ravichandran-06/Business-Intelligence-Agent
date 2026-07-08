@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import ReportBuilder from '../components/ReportBuilder'
 import ReportPreview from '../components/ReportPreview'
-import ReportHistoryCard from '../components/ReportHistoryCard'
 import { generateReport, getReportDownloadPdfUrl, getReportDownloadCsvUrl } from '../services/api'
 
 function ReportsPage() {
@@ -10,6 +9,7 @@ function ReportsPage() {
   const [error, setError] = useState('')
   const [history, setHistory] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
   const selected = useMemo(
     () => history.find((r) => r.id === selectedId) || history[0] || null,
@@ -21,9 +21,15 @@ function ReportsPage() {
     setError('')
     try {
       const report = await generateReport(reportType)
-      const item = { id: crypto.randomUUID(), ...report }
+      const item = { 
+        id: crypto.randomUUID(), 
+        type: reportType,
+        generatedAt: Date.now(),
+        ...report 
+      }
       setHistory((prev) => [item, ...prev])
       setSelectedId(item.id)
+      setIsHistoryOpen(false)
     } catch (err) {
       setError(err?.message || 'Failed to generate report.')
     } finally {
@@ -43,52 +49,68 @@ function ReportsPage() {
 
   return (
     <section className="reports-center">
-      <div className="reports-header">
-        <div>
-          <h1 className="reports-title">Reports Center</h1>
-          <p className="reports-subtitle">Generate and export executive business reports</p>
-        </div>
+      {/* Left Panel - Report Builder Sidebar */}
+      <div className="reports-sidebar">
+        <ReportBuilder
+          onGenerate={onGenerate}
+          isLoading={isLoading}
+          reportType={reportType}
+          onTypeChange={setReportType}
+          isHistoryOpen={isHistoryOpen}
+          onToggleHistory={() => setIsHistoryOpen(!isHistoryOpen)}
+        />
       </div>
 
-      {error && <div className="reports-error">{error}</div>}
-
-      <div className="reports-main">
-        {/* Left Panel - Report Builder */}
-        <div className="reports-left">
-          <ReportBuilder
-            onGenerate={onGenerate}
-            isLoading={isLoading}
-            reportType={reportType}
-            onTypeChange={setReportType}
-          />
+      {/* Right Panel - Scrollable Content */}
+      <div className="reports-content-area">
+        <div className="reports-header">
+          <div>
+            <h1 className="reports-title">Reports Center</h1>
+            <p className="reports-subtitle">Generate and export executive business reports</p>
+          </div>
         </div>
 
-        {/* Right Panel - Live Preview */}
-        <div className="reports-right">
-          <ReportPreview report={selected} isLoading={isLoading} />
+        {error && <div className="reports-error">{error}</div>}
+
+        <div className="reports-main-content">
+          {isHistoryOpen ? (
+            <div className="report-history-view">
+              <h2 className="history-view-title">Report History</h2>
+              {history.length === 0 ? (
+                <div className="empty-history-state">
+                  <p>No reports generated yet.</p>
+                  <p>Generate your first report to see it here.</p>
+                </div>
+              ) : (
+                <div className="history-view-list">
+                  {history.map((item) => {
+                    const dateObj = new Date(item.generatedAt || Date.now())
+                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+                    const typeLabel = item.type === 'monthly' ? 'Monthly Report' : item.type === 'quarterly' ? 'Quarterly Report' : 'Full Business Review'
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className={`history-list-item ${selectedId === item.id ? 'active' : ''}`}
+                        onClick={() => {
+                          setSelectedId(item.id)
+                          setIsHistoryOpen(false)
+                        }}
+                      >
+                        <h4 className="item-title">{typeLabel}</h4>
+                        <p className="item-date">Generated: {dateStr} • {timeStr}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          ) : (
+            <ReportPreview report={selected} isLoading={isLoading} />
+          )}
         </div>
       </div>
-
-      {/* Bottom Section - Report History */}
-      {history.length > 0 && (
-        <div className="reports-history-section">
-          <div className="history-header">
-            <h2 className="history-title">Report History</h2>
-            <p className="history-subtitle">{history.length} report{history.length !== 1 ? 's' : ''} generated</p>
-          </div>
-
-          <div className="history-grid">
-            {history.map((item) => (
-              <ReportHistoryCard
-                key={item.id}
-                report={item}
-                isSelected={selectedId === item.id}
-                onClick={() => setSelectedId(item.id)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   )
 }
