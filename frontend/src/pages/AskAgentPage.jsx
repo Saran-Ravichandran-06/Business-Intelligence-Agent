@@ -169,33 +169,33 @@ function AskAgentPage() {
         <div className="agent-main">
           {/* Header & Input Box */}
           <div className="workspace-header">
-            <div className="workspace-title-row">
-              <h1 className="agent-title">AI Business Analyst</h1>
+            <div className="dataset-badge-container">
               <div className="dataset-badge-agent">
                 <span className="badge-dot"></span>
                 <span className="badge-text">Dataset Active</span>
               </div>
             </div>
-            
             <div className="workspace-input-area">
-              <div className="workspace-input-wrapper">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Ask about revenue, trends, comparisons, forecasts..."
-                  rows={1}
-                  disabled={isLoading}
-                  className="workspace-input-field"
-                />
-                <button
-                  className="workspace-send-btn"
-                  onClick={() => submitQuery(input)}
-                  disabled={!canSend}
-                  title="Analyze"
-                >
-                  {isLoading ? <div className="spinner-small" /> : 'Analyze'}
-                </button>
+              <div className="workspace-input-flex">
+                <div className="workspace-input-wrapper">
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask about revenue, trends, comparisons, forecasts..."
+                    rows={1}
+                    disabled={isLoading}
+                    className="workspace-input-field"
+                  />
+                  <button
+                    className="workspace-send-btn"
+                    onClick={() => submitQuery(input)}
+                    disabled={!canSend}
+                    title="Analyze"
+                  >
+                    {isLoading ? <div className="spinner-small" /> : 'Analyze'}
+                  </button>
+                </div>
               </div>
               {error && <p className="workspace-error">{error}</p>}
             </div>
@@ -210,7 +210,6 @@ function AskAgentPage() {
               </div>
             ) : history.length === 0 ? (
               <div className="workspace-empty">
-                <div className="empty-illustration">📊</div>
                 <h2 className="welcome-title">Ready to Analyze</h2>
                 <p className="welcome-text">Submit a query above to generate insights, metrics, and charts instantly.</p>
                 <div className="suggested-queries-wrapper">
