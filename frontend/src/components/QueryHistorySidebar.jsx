@@ -39,16 +39,6 @@ function QueryHistorySidebar({ history, selectedId, onSelectQuery, onClearHistor
           ))}
         </div>
       )}
-
-      <div className="sidebar-section">
-        <h4 className="sidebar-section-title">💾 Saved Insights</h4>
-        <p className="sidebar-section-empty">Coming soon</p>
-      </div>
-
-      <div className="sidebar-section">
-        <h4 className="sidebar-section-title">📋 Recent Reports</h4>
-        <p className="sidebar-section-empty">Coming soon</p>
-      </div>
     </div>
   )
 }

@@ -11,8 +11,6 @@ import {
   YAxis,
 } from 'recharts'
 import QueryHistorySidebar from '../components/QueryHistorySidebar'
-import AnalysisDetailsSidebar from '../components/AnalysisDetailsSidebar'
-import ChatMessage from '../components/ChatMessage'
 import SuggestedQueries from '../components/SuggestedQueries'
 import { runAgentQuery } from '../services/api'
 
@@ -41,7 +39,7 @@ function getChartRows(visualizationData) {
 function buildMetricsFromAnalytics(analyticsResults) {
   if (!analyticsResults) return []
   
-  return Object.entries(analyticsResults).slice(0, 3).map(([key, value]) => ({
+  return Object.entries(analyticsResults).slice(0, 4).map(([key, value]) => ({
     label: key.replace(/_/g, ' '),
     value: formatValue(value),
   }))
@@ -53,18 +51,13 @@ function AskAgentPage() {
   const [error, setError] = useState('')
   const [history, setHistory] = useState([])
   const [selectedId, setSelectedId] = useState(null)
-  const messagesEndRef = useRef(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
   const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading])
   const selected = useMemo(
     () => history.find((h) => h.id === selectedId) || history[0] || null,
     [history, selectedId],
   )
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [history])
 
   const submitQuery = async (rawQuery) => {
     const query = rawQuery.trim()
@@ -106,13 +99,8 @@ function AskAgentPage() {
     }
   }
 
-  const handleSelectQuery = (id) => {
-    setSelectedId(id)
-  }
-
   const visualizationRows = getChartRows(selected?.visualization_data)
   const chartType = selected?.visualization_data?.chart_type
-  const queryAnalysis = selected?.query_analysis
   const analyticsResults = selected?.analytics_results
   const metrics = buildMetricsFromAnalytics(analyticsResults)
 
@@ -120,28 +108,35 @@ function AskAgentPage() {
     if (visualizationRows.length === 0) return null
 
     return (
-      <div style={{ width: '100%', height: 250 }}>
+      <div className="analysis-chart-container">
         <ResponsiveContainer>
           {chartType === 'bar' ? (
             <BarChart data={visualizationRows}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="label" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
-              <Tooltip />
-              <Bar dataKey="value" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+              <XAxis dataKey="label" stroke="#64748b" axisLine={false} tickLine={false} />
+              <YAxis stroke="#64748b" axisLine={false} tickLine={false} />
+              <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+              <Bar dataKey="value" fill="url(#colorUv)" radius={[6, 6, 0, 0]} barSize={40} />
+              <defs>
+                <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#2563eb" stopOpacity={1}/>
+                </linearGradient>
+              </defs>
             </BarChart>
           ) : (
             <LineChart data={visualizationRows}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="label" stroke="#94a3b8" />
-              <YAxis stroke="#94a3b8" />
-              <Tooltip />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+              <XAxis dataKey="label" stroke="#64748b" axisLine={false} tickLine={false} />
+              <YAxis stroke="#64748b" axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
               <Line
                 type="monotone"
                 dataKey="value"
                 stroke="#10b981"
-                strokeWidth={2}
-                dot={{ fill: '#10b981', r: 4 }}
+                strokeWidth={3}
+                dot={{ fill: '#10b981', r: 5, strokeWidth: 2, stroke: '#fff' }}
+                activeDot={{ r: 8 }}
               />
             </LineChart>
           )}
@@ -151,100 +146,143 @@ function AskAgentPage() {
   }
 
   return (
-    <section className="agent-workspace">
+    <section className={`agent-workspace ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
       <div className="agent-container">
         {/* Left Sidebar */}
-        <QueryHistorySidebar
-          history={history}
-          selectedId={selectedId}
-          onSelectQuery={handleSelectQuery}
-          onClearHistory={handleClearHistory}
-        />
-
-        {/* Center Chat Area */}
-        <div className="agent-main">
-          <div className="agent-header">
-            <h1 className="agent-title">AI Business Analyst</h1>
-            <p className="agent-subtitle">Analyze your data with natural language queries</p>
-            <div className="dataset-badge-agent">
-              <span className="badge-dot"></span>
-              <span className="badge-text">Dataset Active</span>
-            </div>
-          </div>
-
-          <div className="chat-container">
-            {history.length === 0 ? (
-              <div className="chat-welcome">
-                <h2 className="welcome-title">Welcome to AI Business Analyst</h2>
-                <p className="welcome-text">Ask questions about your data and get instant insights</p>
-                <SuggestedQueries
-                  queries={SUGGESTIONS}
-                  onSelect={submitQuery}
-                  disabled={isLoading}
-                />
-              </div>
-            ) : (
-              <div className="messages-list">
-                {history
-                  .slice()
-                  .reverse()
-                  .map((item) => (
-                    <div key={item.id}>
-                      <ChatMessage role="user" content={item.query} />
-                      {item.error ? (
-                        <ChatMessage
-                          role="assistant"
-                          content={`Unable to analyze: ${item.error}`}
-                        />
-                      ) : (
-                        <ChatMessage
-                          role="assistant"
-                          content={item.insight || 'Analysis complete'}
-                          metrics={metrics}
-                          chart={renderChart()}
-                          sources={item.analytics_results}
-                          timestamp={item.timestamp}
-                        />
-                      )}
-                    </div>
-                  ))}
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </div>
-
-          {/* Chat Input */}
-          <div className="chat-input-area">
-            {error && <p className="chat-error">{error}</p>}
-            
-            <div className="chat-input-wrapper">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about revenue, trends, comparisons, forecasts..."
-                rows={1}
-                disabled={isLoading}
-                className="chat-input-field"
-              />
-              <button
-                className="chat-send-btn"
-                onClick={() => submitQuery(input)}
-                disabled={!canSend}
-                title="Send (Shift+Enter for new line)"
-              >
-                {isLoading ? '⏳' : '📤'}
-              </button>
-            </div>
-            
-            <p className="input-hint">
-              {isLoading ? 'Processing your query...' : 'Tip: Use Shift+Enter for a new line'}
-            </p>
-          </div>
+        <div className="agent-sidebar-wrapper">
+          <QueryHistorySidebar
+            history={history}
+            selectedId={selectedId}
+            onSelectQuery={setSelectedId}
+            onClearHistory={handleClearHistory}
+          />
+          <button 
+            className="sidebar-toggle-btn"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+          >
+            {isSidebarOpen ? '◀' : '▶'}
+          </button>
         </div>
 
-        {/* Right Sidebar */}
-        <AnalysisDetailsSidebar analysis={queryAnalysis} confidence={75} />
+        {/* Main Area */}
+        <div className="agent-main">
+          {/* Header & Input Box */}
+          <div className="workspace-header">
+            <div className="dataset-badge-container">
+              <div className="dataset-badge-agent">
+                <span className="badge-dot"></span>
+                <span className="badge-text">Dataset Active</span>
+              </div>
+            </div>
+            <div className="workspace-input-area">
+              <div className="workspace-input-flex">
+                <div className="workspace-input-wrapper">
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask about revenue, trends, comparisons, forecasts..."
+                    rows={1}
+                    disabled={isLoading}
+                    className="workspace-input-field"
+                  />
+                  <button
+                    className="workspace-send-btn"
+                    onClick={() => submitQuery(input)}
+                    disabled={!canSend}
+                    title="Analyze"
+                  >
+                    {isLoading ? <div className="spinner-small" /> : 'Analyze'}
+                  </button>
+                </div>
+              </div>
+              {error && <p className="workspace-error">{error}</p>}
+            </div>
+          </div>
+
+          {/* Response Workspace */}
+          <div className="workspace-content">
+            {isLoading ? (
+              <div className="workspace-loading">
+                <div className="spinner-large" />
+                <p>Analyzing your data...</p>
+              </div>
+            ) : history.length === 0 ? (
+              <div className="workspace-empty">
+                <h2 className="welcome-title">Ready to Analyze</h2>
+                <p className="welcome-text">Submit a query above to generate insights, metrics, and charts instantly.</p>
+                <div className="suggested-queries-wrapper">
+                  <SuggestedQueries
+                    queries={SUGGESTIONS}
+                    onSelect={submitQuery}
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            ) : selected ? (
+              <div className="analysis-response">
+                {selected.error ? (
+                  <div className="analysis-error-card">
+                    <h3>Analysis Failed</h3>
+                    <p>{selected.error}</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* 1. Business Insight */}
+                    <div className="analysis-section insight-card">
+                      <div className="section-icon">✨</div>
+                      <div className="insight-content">
+                        <h3>Business Insight</h3>
+                        <p>{selected.insight}</p>
+                        <p className="query-reference">Query: "{selected.query}"</p>
+                      </div>
+                    </div>
+
+                    {/* 2. Key Metrics */}
+                    {metrics && metrics.length > 0 && (
+                      <div className="analysis-section metrics-section">
+                        {metrics.map((metric, idx) => (
+                          <div key={idx} className="analysis-metric-card">
+                            <p className="metric-label">{metric.label}</p>
+                            <p className="metric-value">{metric.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 3. Visualization */}
+                    {visualizationRows.length > 0 && (
+                      <div className="analysis-section chart-card">
+                        <h3>Visualization</h3>
+                        {renderChart()}
+                      </div>
+                    )}
+
+                    {/* 4. Supporting Analytics */}
+                    {analyticsResults && (
+                      <div className="analysis-section analytics-card">
+                        <h3>Supporting Analytics</h3>
+                        <div className="analytics-table-wrapper">
+                          <table className="analytics-table">
+                            <tbody>
+                              {Object.entries(analyticsResults).map(([key, value]) => (
+                                <tr key={key}>
+                                  <td className="analytics-key">{key.replace(/_/g, ' ')}</td>
+                                  <td className="analytics-value">{formatValue(value)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
     </section>
   )
