@@ -21,11 +21,11 @@ function ReportsPage() {
     [history, selectedId],
   )
 
-  const onGenerate = async () => {
+  const onGenerate = async (options) => {
     setIsLoading(true)
     setError('')
     try {
-      const report = await generateReport(reportType)
+      const report = await generateReport(reportType, options)
       const item = { 
         id: crypto.randomUUID(), 
         type: reportType,

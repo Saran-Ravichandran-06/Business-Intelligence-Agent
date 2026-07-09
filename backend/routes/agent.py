@@ -5,6 +5,7 @@ import httpx
 from backend.agent.models import (
     AgentQueryRequest,
     AgentQueryResponse,
+)
 from backend.agent.response_builder import run_agent_query_pipeline
 
 router = APIRouter(prefix="/agent", tags=["agent"])

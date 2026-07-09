@@ -109,11 +109,18 @@ export async function runAgentQuery(query) {
   return response.json()
 }
 
-export async function generateReport(reportType) {
+export async function generateReport(reportType, options = {}) {
+  const payload = { 
+    report_type: reportType,
+    include_charts: options.charts ?? true,
+    include_ai_insights: options.insights ?? true,
+    include_forecast: options.forecast ?? true,
+  }
+
   const response = await fetch(`${API_BASE_URL}/reports/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ report_type: reportType }),
+    body: JSON.stringify(payload),
   })
 
   if (!response.ok) {

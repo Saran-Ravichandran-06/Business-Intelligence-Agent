@@ -14,12 +14,20 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 
 class GenerateReportRequest(BaseModel):
     report_type: str
+    include_charts: bool = True
+    include_ai_insights: bool = True
+    include_forecast: bool = True
 
 
 @router.post("/generate")
 def generate(payload: GenerateReportRequest) -> dict:
     try:
-        return generate_report(payload.report_type)
+        return generate_report(
+            report_type=payload.report_type,
+            include_charts=payload.include_charts,
+            include_ai_insights=payload.include_ai_insights,
+            include_forecast=payload.include_forecast,
+        )
     except ReportError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
