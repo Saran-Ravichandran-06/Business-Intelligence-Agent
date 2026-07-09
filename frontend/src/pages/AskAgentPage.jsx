@@ -21,10 +21,39 @@ const SUGGESTIONS = [
   "Predict next month's revenue",
 ]
 
+function formatNumberShort(num) {
+  if (num >= 1e9) return (num / 1e9).toFixed(1).replace(/\.0$/, '') + 'B'
+  if (num >= 1e6) return (num / 1e6).toFixed(1).replace(/\.0$/, '') + 'M'
+  if (num >= 1e3) return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'K'
+  return num.toString()
+}
+
 function formatValue(value) {
   if (value === null || value === undefined) return 'N/A'
+  
+  if (typeof value === 'object' && !Array.isArray(value)) {
+    return Object.entries(value).map(([k, v]) => {
+      const valStr = typeof v === 'number' ? formatNumberShort(v) : v
+      const keyStr = k.length > 3 && /^[A-Z][a-z]+$/.test(k) ? k.substring(0, 3) : k
+      return `${keyStr}: ${valStr}`
+    }).join('\n')
+  }
+
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value)
+      if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return Object.entries(parsed).map(([k, v]) => {
+          const valStr = typeof v === 'number' ? formatNumberShort(v) : v
+          const keyStr = k.length > 3 && /^[A-Z][a-z]+$/.test(k) ? k.substring(0, 3) : k
+          return `${keyStr}: ${valStr}`
+        }).join('\n')
+      }
+    } catch(e) {}
+  }
+
   if (typeof value === 'number') {
-    return value.toLocaleString(undefined, { maximumFractionDigits: 2 })
+    return formatNumberShort(value)
   }
   return String(value)
 }
@@ -39,10 +68,64 @@ function getChartRows(visualizationData) {
 function buildMetricsFromAnalytics(analyticsResults) {
   if (!analyticsResults) return []
   
-  return Object.entries(analyticsResults).slice(0, 4).map(([key, value]) => ({
-    label: key.replace(/_/g, ' '),
-    value: formatValue(value),
-  }))
+  return Object.entries(analyticsResults).slice(0, 4).map(([key, value]) => {
+    const label = key.replace(/_/g, ' ')
+    let formattedValue = value;
+    
+    if (label.toLowerCase() === 'periods') {
+      let parts = [];
+      if (typeof value === 'string') {
+        parts = value.split(',').map(s => s.trim());
+      } else if (Array.isArray(value)) {
+        parts = value;
+      }
+      if (parts.length > 1) {
+        const formatMonth = (str) => {
+          const [yyyy, mm] = String(str).split('-');
+          if (yyyy && mm) {
+            const date = new Date(parseInt(yyyy), parseInt(mm) - 1);
+            const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+            return `01 ${monthStr} ${yyyy.substring(2)}`;
+          }
+          return str;
+        }
+        formattedValue = `${formatMonth(parts[0])} – ${formatMonth(parts[parts.length - 1])}`;
+      } else if (parts.length === 1) {
+        formattedValue = parts[0];
+      } else {
+        formattedValue = formatValue(value);
+      }
+    } else if (label.toLowerCase() === 'monthly values') {
+       let arr = [];
+       if (typeof value === 'string') {
+          // It could be a json string or comma-separated numbers
+          try {
+            const parsed = JSON.parse(value);
+            arr = Array.isArray(parsed) ? parsed : Object.values(parsed);
+          } catch(e) {
+            arr = value.split(',').map(s => Number(s.trim()));
+          }
+       } else if (typeof value === 'object') {
+          arr = Array.isArray(value) ? value : Object.values(value);
+       }
+       
+       arr = arr.map(n => Number(n)).filter(n => !isNaN(n));
+       if (arr.length > 0) {
+          const min = Math.min(...arr);
+          const max = Math.max(...arr);
+          formattedValue = `₹${formatNumberShort(min)} – ₹${formatNumberShort(max)}`;
+       } else {
+          formattedValue = formatValue(value);
+       }
+    } else {
+      formattedValue = formatValue(value);
+    }
+
+    return {
+      label,
+      value: formattedValue,
+    }
+  })
 }
 
 function AskAgentPage() {
@@ -231,7 +314,6 @@ function AskAgentPage() {
                   <>
                     {/* 1. Business Insight */}
                     <div className="analysis-section insight-card">
-                      <div className="section-icon">✨</div>
                       <div className="insight-content">
                         <h3>Business Insight</h3>
                         <p>{selected.insight}</p>
@@ -256,25 +338,6 @@ function AskAgentPage() {
                       <div className="analysis-section chart-card">
                         <h3>Visualization</h3>
                         {renderChart()}
-                      </div>
-                    )}
-
-                    {/* 4. Supporting Analytics */}
-                    {analyticsResults && (
-                      <div className="analysis-section analytics-card">
-                        <h3>Supporting Analytics</h3>
-                        <div className="analytics-table-wrapper">
-                          <table className="analytics-table">
-                            <tbody>
-                              {Object.entries(analyticsResults).map(([key, value]) => (
-                                <tr key={key}>
-                                  <td className="analytics-key">{key.replace(/_/g, ' ')}</td>
-                                  <td className="analytics-value">{formatValue(value)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
                       </div>
                     )}
                   </>
