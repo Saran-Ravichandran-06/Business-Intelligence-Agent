@@ -5,6 +5,7 @@ import RevenueTrendChart from '../components/RevenueTrendChart'
 import TopProductsChart from '../components/TopProductsChart'
 import AIHighlights from '../components/AIHighlights'
 import DashboardHeader from '../components/DashboardHeader'
+import { useAppContext } from '../context/AppContext'
 import {
   fetchDashboardKpis,
   fetchRegionPerformance,
@@ -14,11 +15,14 @@ import {
 } from '../services/api'
 
 function DashboardPage() {
-  const [kpis, setKpis] = useState(null)
-  const [trend, setTrend] = useState([])
-  const [topProducts, setTopProducts] = useState([])
-  const [regions, setRegions] = useState([])
-  const [dataset, setDataset] = useState(null)
+  const {
+    dashboardLoaded, setDashboardLoaded,
+    dashboardKpis: kpis, setDashboardKpis,
+    dashboardTrend: trend, setDashboardTrend,
+    dashboardTopProducts: topProducts, setDashboardTopProducts,
+    dashboardRegions: regions, setDashboardRegions,
+    datasetPreview: dataset, setDatasetPreview
+  } = useAppContext()
 
   const [isLoading, setIsLoading] = useState(false)
   const [chartsLoading, setChartsLoading] = useState(false)
@@ -30,6 +34,12 @@ function DashboardPage() {
       setChartsLoading(true)
       setError('')
 
+      if (dashboardLoaded) {
+        setIsLoading(false)
+        setChartsLoading(false)
+        return
+      }
+
       try {
         const [kpiData, trendData, productsData, regionsData, datasetData] = await Promise.all([
           fetchDashboardKpis(),
@@ -39,11 +49,12 @@ function DashboardPage() {
           fetchLatestDatasetPreview(),
         ])
 
-        setKpis(kpiData)
-        setTrend(trendData.points || [])
-        setTopProducts(productsData.items || [])
-        setRegions(regionsData.regions || [])
-        setDataset(datasetData)
+        setDashboardKpis(kpiData)
+        setDashboardTrend(trendData.points || [])
+        setDashboardTopProducts(productsData.items || [])
+        setDashboardRegions(regionsData.regions || [])
+        setDatasetPreview(datasetData)
+        setDashboardLoaded(true)
       } catch (err) {
         setError(err?.message || 'Unable to load dashboard data.')
       } finally {

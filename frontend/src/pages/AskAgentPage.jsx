@@ -128,13 +128,18 @@ function buildMetricsFromAnalytics(analyticsResults) {
   })
 }
 
+import { useAppContext } from '../context/AppContext'
+
 function AskAgentPage() {
-  const [input, setInput] = useState('')
+  const {
+    agentInput: input, setAgentInput: setInput,
+    agentHistory: history, setAgentHistory: setHistory,
+    agentSelectedId: selectedId, setAgentSelectedId: setSelectedId,
+    agentSidebarOpen: isSidebarOpen, setAgentSidebarOpen: setIsSidebarOpen,
+  } = useAppContext()
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [history, setHistory] = useState([])
-  const [selectedId, setSelectedId] = useState(null)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
   const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading])
   const selected = useMemo(

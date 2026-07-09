@@ -3,13 +3,18 @@ import ReportBuilder from '../components/ReportBuilder'
 import ReportPreview from '../components/ReportPreview'
 import { generateReport, getReportDownloadPdfUrl, getReportDownloadCsvUrl } from '../services/api'
 
+import { useAppContext } from '../context/AppContext'
+
 function ReportsPage() {
-  const [reportType, setReportType] = useState('monthly')
+  const {
+    reportType, setReportType,
+    reportHistory: history, setReportHistory: setHistory,
+    reportSelectedId: selectedId, setReportSelectedId: setSelectedId,
+    isHistoryOpen, setIsHistoryOpen,
+  } = useAppContext()
+
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [history, setHistory] = useState([])
-  const [selectedId, setSelectedId] = useState(null)
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
 
   const selected = useMemo(
     () => history.find((r) => r.id === selectedId) || history[0] || null,

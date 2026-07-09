@@ -4,12 +4,13 @@ import DatasetPreviewTable from '../components/DatasetPreviewTable'
 import FileUpload from '../components/FileUpload'
 import DatasetStatus from '../components/DatasetStatus'
 import { fetchLatestDatasetPreview, uploadDatasetCsv } from '../services/api'
+import { useAppContext } from '../context/AppContext'
 
 function UploadPage() {
+  const { datasetPreview: preview, setDatasetPreview: setPreview, resetSession } = useAppContext()
   const [selectedFile, setSelectedFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState('')
-  const [preview, setPreview] = useState(null)
 
   const handleSelectFile = (file) => {
     setError('')
@@ -40,6 +41,7 @@ function UploadPage() {
     try {
       await uploadDatasetCsv(selectedFile)
       const previewData = await fetchLatestDatasetPreview()
+      resetSession()
       setPreview(previewData)
     } catch (err) {
       setError(err?.message || 'Upload failed.')
