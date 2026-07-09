@@ -95,48 +95,6 @@ export async function fetchRegionPerformance() {
   return response.json()
 }
 
-export async function analyzeAgentQuery(query) {
-  const response = await fetch(`${API_BASE_URL}/agent/analyze-query`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query }),
-  })
-
-  if (!response.ok) {
-    throw new Error(await readErrorDetail(response))
-  }
-
-  return response.json()
-}
-
-export async function analyzeWithEngine(task) {
-  const response = await fetch(`${API_BASE_URL}/agent/analyze`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(task),
-  })
-
-  if (!response.ok) {
-    throw new Error(await readErrorDetail(response))
-  }
-
-  return response.json()
-}
-
-export async function generateBusinessInsight(payload) {
-  const response = await fetch(`${API_BASE_URL}/agent/generate-insight`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-
-  if (!response.ok) {
-    throw new Error(await readErrorDetail(response))
-  }
-
-  return response.json()
-}
-
 export async function runAgentQuery(query) {
   const response = await fetch(`${API_BASE_URL}/agent/query`, {
     method: 'POST',
