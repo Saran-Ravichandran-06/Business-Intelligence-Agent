@@ -137,6 +137,20 @@ function ReportPreview({ report, isLoading }) {
         </div>
       )}
 
+      {/* Forecasts */}
+      {(report.forecasts || []).length > 0 && (
+        <div className="preview-section forecast-section">
+          <h3 className="section-title">Forecasts</h3>
+          <ul className="insights-list">
+            {(report.forecasts || []).map((fc, idx) => (
+              <li key={idx} className="insight-item">
+                {fc}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Export Actions */}
       <div className="preview-section export-section">
         <h3 className="section-title">Export Report</h3>

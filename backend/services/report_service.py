@@ -33,12 +33,11 @@ def _report_store_path() -> Path:
 
 
 def _build_summary(report_type: str, kpis: dict[str, Any], top_region: str | None, top_product: str | None) -> str:
+    r_type = report_type.replace('_', ' ').capitalize()
     return (
-        f"{report_type.capitalize()} report generated from current dataset. "
-        f"Total revenue: {kpis.get('total_revenue', 0):,.2f}. "
-        f"Total orders: {kpis.get('total_orders', 0)}. "
-        f"Top-performing region: {top_region or 'N/A'}. "
-        f"Top-performing product: {top_product or 'N/A'}."
+        f"This {r_type} report provides a comprehensive overview of your recent business performance. "
+        f"During this period, the business generated a total revenue of ${kpis.get('total_revenue', 0):,.2f} across {kpis.get('total_orders', 0)} orders, "
+        f"indicating a solid trajectory. The {top_region or 'N/A'} region led the way in sales, strongly driven by our top-performing item, {top_product or 'N/A'}."
     )
 
 
@@ -113,6 +112,7 @@ def generate_report(
         charts = []
 
     insights: list[str] = []
+    forecasts: list[str] = []
     if include_ai_insights:
         try:
             trend_payload = {
@@ -137,9 +137,9 @@ def generate_report(
 
     if include_forecast:
         try:
-            insights.append(generate_insight("forecast", {"current_revenue": kpis["total_revenue"]}))
+            forecasts.append(generate_insight("forecast", {"current_revenue": kpis["total_revenue"]}))
         except InsightGenerationError:
-            insights.append("Based on the current trajectory, revenue is projected to remain stable over the next period.")
+            forecasts.append("Based on the current trajectory, revenue is projected to remain stable over the next period.")
 
     report = {
         "report_type": report_type,
@@ -148,6 +148,7 @@ def generate_report(
         "kpis": kpis,
         "charts": charts,
         "insights": insights,
+        "forecasts": forecasts,
     }
 
     global _LAST_REPORT

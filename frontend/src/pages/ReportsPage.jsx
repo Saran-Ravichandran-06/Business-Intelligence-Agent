@@ -108,9 +108,9 @@ function ReportsPage() {
                             setIsHistoryOpen(false)
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                            <h4 className="item-title" style={{ margin: 0 }}>{typeLabel}</h4>
-                            <span style={{ fontSize: '0.8rem', color: '#64748b', background: '#f1f5f9', padding: '4px 8px', borderRadius: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                            <h4 className="item-title" style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>{typeLabel}</h4>
+                            <span style={{ fontSize: '0.85rem', color: '#3b82f6', background: '#eff6ff', padding: '4px 10px', borderRadius: '12px', fontWeight: 500, border: '1px solid #bfdbfe' }}>
                               {datasetPreview?.file_name || datasetPreview?.filename || 'Current Dataset'}
                             </span>
                           </div>
