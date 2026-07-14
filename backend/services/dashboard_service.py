@@ -60,8 +60,9 @@ def _coerce_date(df: pd.DataFrame, column: str) -> pd.Series:
     return pd.to_datetime(df[column], errors="coerce")
 
 
-def calculate_kpis() -> DashboardKPIs:
-    df = _load_dataset_frame()
+def calculate_kpis(df: pd.DataFrame | None = None) -> DashboardKPIs:
+    if df is None:
+        df = _load_dataset_frame()
 
     revenue_col = _detect_column(df, ["Revenue", "Sales", "Amount"])
     if revenue_col is None:
@@ -90,8 +91,9 @@ def calculate_kpis() -> DashboardKPIs:
     )
 
 
-def revenue_trend_analysis() -> list[dict[str, Any]]:
-    df = _load_dataset_frame()
+def revenue_trend_analysis(df: pd.DataFrame | None = None) -> list[dict[str, Any]]:
+    if df is None:
+        df = _load_dataset_frame()
 
     date_col = _detect_column(df, ["Date", "OrderDate", "InvoiceDate"])
     revenue_col = _detect_column(df, ["Revenue", "Sales", "Amount"])
@@ -116,8 +118,9 @@ def revenue_trend_analysis() -> list[dict[str, Any]]:
     ]
 
 
-def top_products_analysis(limit: int = 10) -> list[dict[str, Any]]:
-    df = _load_dataset_frame()
+def top_products_analysis(limit: int = 10, df: pd.DataFrame | None = None) -> list[dict[str, Any]]:
+    if df is None:
+        df = _load_dataset_frame()
 
     product_col = _detect_column(df, ["Product", "Item", "SKU"])
     revenue_col = _detect_column(df, ["Revenue", "Sales", "Amount"])
@@ -141,8 +144,9 @@ def top_products_analysis(limit: int = 10) -> list[dict[str, Any]]:
     ]
 
 
-def region_analysis() -> list[dict[str, Any]]:
-    df = _load_dataset_frame()
+def region_analysis(df: pd.DataFrame | None = None) -> list[dict[str, Any]]:
+    if df is None:
+        df = _load_dataset_frame()
 
     region_col = _detect_column(df, ["Region", "Market", "Territory"])
     revenue_col = _detect_column(df, ["Revenue", "Sales", "Amount"])

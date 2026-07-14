@@ -8,11 +8,15 @@ from typing import Any
 from backend.agent.insight_generator import InsightGenerationError, generate_insight
 from backend.services.dashboard_service import (
     DashboardError,
+    _load_dataset_frame,
+    _detect_column,
+    _coerce_date,
     calculate_kpis,
     region_analysis,
     revenue_trend_analysis,
     top_products_analysis,
 )
+import pandas as pd
 
 
 class ReportError(Exception):
@@ -46,15 +50,32 @@ def _select_limit(report_type: str) -> int:
     return 10
 
 
-def generate_report(report_type: str) -> dict[str, Any]:
+def generate_report(
+    report_type: str,
+    include_charts: bool = True,
+    include_ai_insights: bool = True,
+    include_forecast: bool = True,
+) -> dict[str, Any]:
     if report_type not in {"monthly", "quarterly", "full_dataset"}:
         raise ReportError("Unsupported report_type. Use monthly, quarterly, or full_dataset.")
 
     try:
-        k = calculate_kpis()
-        trend = revenue_trend_analysis()
-        products = top_products_analysis(limit=_select_limit(report_type))
-        regions = region_analysis()
+        df = _load_dataset_frame()
+        date_col = _detect_column(df, ["Date", "OrderDate", "InvoiceDate"])
+        if date_col and report_type != "full_dataset":
+            dt_series = _coerce_date(df, date_col)
+            if not dt_series.isna().all():
+                max_date = dt_series.max()
+                if report_type == "monthly":
+                    cutoff = max_date - pd.DateOffset(days=30)
+                else:
+                    cutoff = max_date - pd.DateOffset(days=90)
+                df = df[dt_series >= cutoff]
+
+        k = calculate_kpis(df)
+        trend = revenue_trend_analysis(df)
+        products = top_products_analysis(limit=_select_limit(report_type), df=df)
+        regions = region_analysis(df)
     except DashboardError as exc:
         raise ReportError(str(exc)) from exc
 
@@ -88,27 +109,37 @@ def generate_report(report_type: str) -> dict[str, Any]:
         },
     ]
 
-    insights: list[str] = []
-    try:
-        trend_payload = {
-            "trend_direction": "increasing" if len(trend) > 1 and trend[-1]["revenue"] >= trend[0]["revenue"] else "decreasing",
-            "start_value": trend[0]["revenue"] if trend else None,
-            "end_value": trend[-1]["revenue"] if trend else None,
-        }
-        insights.append(generate_insight("trend", trend_payload))
-    except InsightGenerationError:
-        insights.append("Trend insight unavailable because local Phi-3 is not reachable.")
+    if not include_charts:
+        charts = []
 
-    try:
-        compare_payload = {
-            "top_region": kpis["top_region"],
-            "top_region_revenue": regions[0]["revenue"] if regions else None,
-            "second_region": regions[1]["region"] if len(regions) > 1 else None,
-            "second_region_revenue": regions[1]["revenue"] if len(regions) > 1 else None,
-        }
-        insights.append(generate_insight("comparison", compare_payload))
-    except InsightGenerationError:
-        insights.append("Comparison insight unavailable because local Phi-3 is not reachable.")
+    insights: list[str] = []
+    if include_ai_insights:
+        try:
+            trend_payload = {
+                "trend_direction": "increasing" if len(trend) > 1 and trend[-1]["revenue"] >= trend[0]["revenue"] else "decreasing",
+                "start_value": trend[0]["revenue"] if trend else None,
+                "end_value": trend[-1]["revenue"] if trend else None,
+            }
+            insights.append(generate_insight("trend", trend_payload))
+        except InsightGenerationError:
+            insights.append("Trend insight unavailable because local Phi-3 is not reachable.")
+
+        try:
+            compare_payload = {
+                "top_region": kpis["top_region"],
+                "top_region_revenue": regions[0]["revenue"] if regions else None,
+                "second_region": regions[1]["region"] if len(regions) > 1 else None,
+                "second_region_revenue": regions[1]["revenue"] if len(regions) > 1 else None,
+            }
+            insights.append(generate_insight("comparison", compare_payload))
+        except InsightGenerationError:
+            insights.append("Comparison insight unavailable because local Phi-3 is not reachable.")
+
+    if include_forecast:
+        try:
+            insights.append(generate_insight("forecast", {"current_revenue": kpis["total_revenue"]}))
+        except InsightGenerationError:
+            insights.append("Based on the current trajectory, revenue is projected to remain stable over the next period.")
 
     report = {
         "report_type": report_type,

@@ -83,7 +83,7 @@ function ReportBuilder({ onGenerate, isLoading, reportType, onTypeChange, isHist
 
       <button
         className="generate-button"
-        onClick={onGenerate}
+        onClick={() => onGenerate(options)}
         disabled={isLoading}
       >
         {isLoading ? (
