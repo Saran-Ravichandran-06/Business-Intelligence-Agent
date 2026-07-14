@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import DatasetSummary from '../components/DatasetSummary'
+import DatasetStatus from '../components/DatasetStatus'
 import DatasetPreviewTable from '../components/DatasetPreviewTable'
 import FileUpload from '../components/FileUpload'
-import DatasetStatus from '../components/DatasetStatus'
 import { fetchLatestDatasetPreview, uploadDatasetCsv } from '../services/api'
 import { useAppContext } from '../context/AppContext'
 
@@ -78,19 +78,20 @@ function UploadPage() {
       ) : (
         <div className="upload-success-layout">
           <div className="upload-success-left">
-            <div className="success-header">
+            <div className="success-header" style={{ justifyContent: 'flex-start', textAlign: 'left', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <h2 className="success-title" style={{ fontSize: '1rem', margin: 0 }}>Dataset Uploaded Successfully</h2>
+                <h3 className="success-title" style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>Dataset Uploaded Successfully</h3>
                 <div className="success-icon" style={{ margin: 0 }}>✓</div>
               </div>
               <p className="success-subtitle" style={{ margin: 0 }}>{preview?.file_name || preview?.filename || selectedFile?.name || 'Current Dataset'}</p>
             </div>
             <DatasetSummary dataset={preview} />
+            <DatasetStatus />
           </div>
 
           <div className="upload-success-right">
             <div className="preview-section scrollable-preview-container">
-              <h3 className="preview-title">Data Preview</h3>
+              <h3 className="preview-title">Dataset Preview</h3>
               <div className="scrollable-table-wrapper">
                 <DatasetPreviewTable
                   columnNames={preview?.column_names}

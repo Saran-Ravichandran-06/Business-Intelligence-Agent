@@ -17,8 +17,6 @@ function DatasetSummary({ dataset }) {
         </div>
       </div>
 
-      <div className="summary-divider"></div>
-
       <div className="summary-features">
         <div className="feature-item">
           <span className="feature-icon">📊</span>
@@ -35,23 +33,6 @@ function DatasetSummary({ dataset }) {
             <p className="feature-status detected">Detected</p>
           </div>
         </div>
-      </div>
-
-      <div className="summary-divider"></div>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-        <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155' }}>
-          <strong>Upload</strong> - <span style={{ color: '#10b981', fontWeight: 500 }}>Complete</span>
-        </p>
-        <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155' }}>
-          <strong>Analysis</strong> - <span style={{ color: '#10b981', fontWeight: 500 }}>Ready</span>
-        </p>
-        <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155' }}>
-          <strong>Queries</strong> - <span style={{ color: '#10b981', fontWeight: 500 }}>Available</span>
-        </p>
-        <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155' }}>
-          <strong>Reports</strong> - <span style={{ color: '#10b981', fontWeight: 500 }}>Ready</span>
-        </p>
       </div>
     </div>
   )

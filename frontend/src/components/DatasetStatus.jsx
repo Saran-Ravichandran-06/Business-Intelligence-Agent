@@ -1,63 +1,45 @@
-function DatasetStatus({ dataset, isLoading }) {
-  const isReady = !!dataset
-
+function DatasetStatus() {
   return (
-    <div className="dataset-status-sidebar">
-      <h3 className="status-title">Status</h3>
-
-      <div className="status-list">
-        <div className="status-item">
-          <div className={`status-icon ${isReady ? 'complete' : 'pending'}`}>
-            {isReady ? '✓' : '○'}
-          </div>
-          <div className="status-content">
-            <p className="status-label">Upload</p>
-            <p className="status-description">{isReady ? 'Complete' : 'Pending'}</p>
+    <div className="dataset-summary-card">
+      <h3 className="summary-title">Dataset Status</h3>
+      
+      <div className="summary-features">
+        <div className="feature-item">
+          <span className="feature-icon">✓</span>
+          <div className="feature-content">
+            <p className="feature-label">Upload</p>
+            <p className="feature-status detected">Complete</p>
           </div>
         </div>
-
-        <div className="status-item">
-          <div className={`status-icon ${isReady ? 'complete' : 'pending'}`}>
-            {isReady ? '✓' : '○'}
-          </div>
-          <div className="status-content">
-            <p className="status-label">Analysis</p>
-            <p className="status-description">{isReady ? 'Ready' : 'Waiting'}</p>
-          </div>
-        </div>
-
-        <div className="status-item">
-          <div className={`status-icon ${isReady ? 'complete' : 'pending'}`}>
-            {isReady ? '✓' : '○'}
-          </div>
-          <div className="status-content">
-            <p className="status-label">Queries</p>
-            <p className="status-description">{isReady ? 'Available' : 'Waiting'}</p>
-          </div>
-        </div>
-
-        <div className="status-item">
-          <div className={`status-icon ${isReady ? 'complete' : 'pending'}`}>
-            {isReady ? '✓' : '○'}
-          </div>
-          <div className="status-content">
-            <p className="status-label">Reports</p>
-            <p className="status-description">{isReady ? 'Ready' : 'Waiting'}</p>
+        
+        <div className="feature-item">
+          <span className="feature-icon">✓</span>
+          <div className="feature-content">
+            <p className="feature-label">Analysis</p>
+            <p className="feature-status detected">Ready</p>
           </div>
         </div>
       </div>
-
-      {isReady && (
-        <>
-          <div className="status-divider"></div>
-          <div className="status-info">
-            <p className="info-icon">💡</p>
-            <p className="info-text">Your dataset is ready for analysis. Navigate to Dashboard to explore.</p>
+      
+      <div className="summary-features" style={{ marginTop: '1rem' }}>
+        <div className="feature-item">
+          <span className="feature-icon">✓</span>
+          <div className="feature-content">
+            <p className="feature-label">Queries</p>
+            <p className="feature-status detected">Available</p>
           </div>
-        </>
-      )}
+        </div>
+        
+        <div className="feature-item">
+          <span className="feature-icon">✓</span>
+          <div className="feature-content">
+            <p className="feature-label">Reports</p>
+            <p className="feature-status detected">Ready</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
-export default DatasetStatus
+export default DatasetStatus;

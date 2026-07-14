@@ -3885,14 +3885,14 @@ body {
 }
 
 .upload-success-left {
-  flex: 0 0 30%;
+  flex: 0 0 25%;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
 .upload-success-right {
-  flex: 0 0 70%;
+  flex: 0 0 75%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3956,6 +3956,16 @@ body {
 .scrollable-table-wrapper table {
   width: 100%;
   white-space: nowrap;
+}
+
+.scrollable-table-wrapper table th,
+.scrollable-table-wrapper table td {
+  padding: 18px 16px;
+}
+
+.scrollable-table-wrapper table th:last-child,
+.scrollable-table-wrapper table td:last-child {
+  padding-right: 24px;
 }
 
 /* Dashboard tweaks */
