@@ -11,6 +11,7 @@ function ReportsPage() {
     reportHistory: history, setReportHistory: setHistory,
     reportSelectedId: selectedId, setReportSelectedId: setSelectedId,
     isHistoryOpen, setIsHistoryOpen,
+    datasetPreview
   } = useAppContext()
 
   const [isLoading, setIsLoading] = useState(false)
@@ -80,35 +81,45 @@ function ReportsPage() {
         <div className="reports-main-content">
           {isHistoryOpen ? (
             <div className="report-history-view">
-              <h2 className="history-view-title">Report History</h2>
               {history.length === 0 ? (
-                <div className="empty-history-state">
-                  <p>No reports generated yet.</p>
-                  <p>Generate your first report to see it here.</p>
+                <div className="empty-report-card">
+                  <div className="empty-state-content">
+                    <h2 className="empty-title">Report History</h2>
+                    <p className="empty-text">No reports generated yet.</p>
+                    <p className="empty-subtext">Generate your first report to see it here.</p>
+                  </div>
                 </div>
               ) : (
-                <div className="history-view-list">
-                  {history.map((item) => {
-                    const dateObj = new Date(item.generatedAt || Date.now())
-                    const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-                    const typeLabel = item.type === 'monthly' ? 'Monthly Report' : item.type === 'quarterly' ? 'Quarterly Report' : 'Full Business Review'
-                    
-                    return (
-                      <div
-                        key={item.id}
-                        className={`history-list-item ${selectedId === item.id ? 'active' : ''}`}
-                        onClick={() => {
-                          setSelectedId(item.id)
-                          setIsHistoryOpen(false)
-                        }}
-                      >
-                        <h4 className="item-title">{typeLabel}</h4>
-                        <p className="item-date">Generated: {dateStr} • {timeStr}</p>
-                      </div>
-                    )
-                  })}
-                </div>
+                <>
+                  <h2 className="history-view-title">Report History</h2>
+                  <div className="history-view-list">
+                    {history.map((item) => {
+                      const dateObj = new Date(item.generatedAt || Date.now())
+                      const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+                      const timeStr = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+                      const typeLabel = item.type === 'monthly' ? 'Monthly Report' : item.type === 'quarterly' ? 'Quarterly Report' : 'Full Business Review'
+                      
+                      return (
+                        <div
+                          key={item.id}
+                          className={`history-list-item ${selectedId === item.id ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedId(item.id)
+                            setIsHistoryOpen(false)
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <h4 className="item-title" style={{ margin: 0 }}>{typeLabel}</h4>
+                            <span style={{ fontSize: '0.8rem', color: '#64748b', background: '#f1f5f9', padding: '4px 8px', borderRadius: '4px' }}>
+                              {datasetPreview?.file_name || datasetPreview?.filename || 'Current Dataset'}
+                            </span>
+                          </div>
+                          <p className="item-date" style={{ margin: 0 }}>Generated: {dateStr} • {timeStr}</p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
               )}
             </div>
           ) : (

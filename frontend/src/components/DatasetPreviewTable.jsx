@@ -10,9 +10,8 @@ function DatasetPreviewTable({ columnNames, rows }) {
   }
 
   return (
-    <div className="card">
-      <h3 className="card-title">Preview (first 10 rows)</h3>
-      <div className="table-wrap">
+    <>
+      <div className="table-wrap" style={{ flex: 1, overflow: 'auto' }}>
         <table className="table">
           <thead>
             <tr>
@@ -32,7 +31,7 @@ function DatasetPreviewTable({ columnNames, rows }) {
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   )
 }
 

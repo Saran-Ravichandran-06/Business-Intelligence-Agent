@@ -118,15 +118,6 @@ function RevenueTrendChart({ points, isLoading }) {
               ))}
             </div>
           </div>
-
-          <div className="control-group">
-            <label className="control-label">Time Range</label>
-            <select className="time-range-select" value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
-              <option value="all">All Data</option>
-              <option value="90days">Last 90 Days</option>
-              <option value="30days">Last 30 Days</option>
-            </select>
-          </div>
         </div>
       </div>
 

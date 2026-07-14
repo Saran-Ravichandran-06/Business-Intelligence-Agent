@@ -76,27 +76,28 @@ function UploadPage() {
           </div>
         </div>
       ) : (
-        <div className="upload-success">
-          <div className="success-content">
+        <div className="upload-success-layout">
+          <div className="upload-success-left">
             <div className="success-header">
-              <div className="success-icon">✓</div>
-              <h2 className="success-title">Dataset Uploaded Successfully</h2>
-              <p className="success-subtitle">{selectedFile?.name}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                <h2 className="success-title" style={{ fontSize: '1rem', margin: 0 }}>Dataset Uploaded Successfully</h2>
+                <div className="success-icon" style={{ margin: 0 }}>✓</div>
+              </div>
+              <p className="success-subtitle" style={{ margin: 0 }}>{preview?.file_name || preview?.filename || selectedFile?.name || 'Current Dataset'}</p>
             </div>
-
             <DatasetSummary dataset={preview} />
-
-            <div className="preview-section">
-              <h3 className="preview-title">Data Preview</h3>
-              <DatasetPreviewTable
-                columnNames={preview?.column_names}
-                rows={preview?.first_10_rows}
-              />
-            </div>
           </div>
 
-          <div className="success-sidebar">
-            <DatasetStatus dataset={preview} isLoading={false} />
+          <div className="upload-success-right">
+            <div className="preview-section scrollable-preview-container">
+              <h3 className="preview-title">Data Preview</h3>
+              <div className="scrollable-table-wrapper">
+                <DatasetPreviewTable
+                  columnNames={preview?.column_names}
+                  rows={preview?.first_10_rows}
+                />
+              </div>
+            </div>
           </div>
         </div>
       )}
