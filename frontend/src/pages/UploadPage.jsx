@@ -80,8 +80,7 @@ function UploadPage() {
           <div className="upload-success-left">
             <div className="success-header" style={{ justifyContent: 'flex-start', textAlign: 'left', alignItems: 'flex-start' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                <h3 className="success-title" style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1e293b', margin: 0 }}>Dataset Uploaded Successfully</h3>
-                <div className="success-icon" style={{ margin: 0 }}>✓</div>
+                <h3 className="summary-title" style={{ margin: 0 }}>Dataset Uploaded Successfully</h3>
               </div>
               <p className="success-subtitle" style={{ margin: 0 }}>{preview?.file_name || preview?.filename || selectedFile?.name || 'Current Dataset'}</p>
             </div>

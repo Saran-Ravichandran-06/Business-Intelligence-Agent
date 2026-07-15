@@ -19,17 +19,15 @@ function DatasetSummary({ dataset }) {
 
       <div className="summary-features">
         <div className="feature-item">
-          <span className="feature-icon">📊</span>
           <div className="feature-content">
-            <p className="feature-label">Revenue Column</p>
+            <p className="feature-label">Date/Time Column</p>
             <p className="feature-status detected">Detected</p>
           </div>
         </div>
         
         <div className="feature-item">
-          <span className="feature-icon">📈</span>
           <div className="feature-content">
-            <p className="feature-label">Profit Column</p>
+            <p className="feature-label">Numeric Features</p>
             <p className="feature-status detected">Detected</p>
           </div>
         </div>

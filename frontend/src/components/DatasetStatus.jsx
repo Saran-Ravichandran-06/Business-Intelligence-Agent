@@ -2,41 +2,19 @@ function DatasetStatus() {
   return (
     <div className="dataset-summary-card">
       <h3 className="summary-title">Dataset Status</h3>
-      
-      <div className="summary-features">
-        <div className="feature-item">
-          <span className="feature-icon">✓</span>
-          <div className="feature-content">
-            <p className="feature-label">Upload</p>
-            <p className="feature-status detected">Complete</p>
-          </div>
-        </div>
-        
-        <div className="feature-item">
-          <span className="feature-icon">✓</span>
-          <div className="feature-content">
-            <p className="feature-label">Analysis</p>
-            <p className="feature-status detected">Ready</p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="summary-features" style={{ marginTop: '1rem' }}>
-        <div className="feature-item">
-          <span className="feature-icon">✓</span>
-          <div className="feature-content">
-            <p className="feature-label">Queries</p>
-            <p className="feature-status detected">Available</p>
-          </div>
-        </div>
-        
-        <div className="feature-item">
-          <span className="feature-icon">✓</span>
-          <div className="feature-content">
-            <p className="feature-label">Reports</p>
-            <p className="feature-status detected">Ready</p>
-          </div>
-        </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: '#f8fafc', padding: '10px', borderRadius: '10px' }}>
+        <p style={{ margin: 0, fontSize: '13px', fontWeight: 500, color: '#475569' }}>
+          Upload - <span style={{ color: '#10b981', fontWeight: 600 }}>Complete</span>
+        </p>
+        <p style={{ margin: 0, fontSize: '13px', fontWeight: 500, color: '#475569' }}>
+          Analysis - <span style={{ color: '#10b981', fontWeight: 600 }}>Ready</span>
+        </p>
+        <p style={{ margin: 0, fontSize: '13px', fontWeight: 500, color: '#475569' }}>
+          Queries - <span style={{ color: '#10b981', fontWeight: 600 }}>Available</span>
+        </p>
+        <p style={{ margin: 0, fontSize: '13px', fontWeight: 500, color: '#475569' }}>
+          Reports - <span style={{ color: '#10b981', fontWeight: 600 }}>Ready</span>
+        </p>
       </div>
     </div>
   )
