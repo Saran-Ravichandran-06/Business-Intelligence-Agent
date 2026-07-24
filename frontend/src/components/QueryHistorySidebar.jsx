@@ -1,4 +1,11 @@
-function QueryHistorySidebar({ history, selectedId, onSelectQuery, onClearHistory }) {
+function QueryHistorySidebar({ history, selectedId, onSelectQuery, onClearHistory, onDeleteQuery }) {
+  const handleDelete = (e, id) => {
+    e.stopPropagation()
+    if (confirm('Delete this conversation?')) {
+      onDeleteQuery(id)
+    }
+  }
+
   return (
     <div className="agent-sidebar-left">
       <div className="sidebar-header">
@@ -7,9 +14,9 @@ function QueryHistorySidebar({ history, selectedId, onSelectQuery, onClearHistor
           <button
             className="sidebar-clear-btn"
             onClick={onClearHistory}
-            title="Clear history"
+            title="Clear all history"
           >
-            ×
+            Clear All
           </button>
         )}
       </div>
@@ -27,13 +34,40 @@ function QueryHistorySidebar({ history, selectedId, onSelectQuery, onClearHistor
               className={`history-item ${selectedId === item.id ? 'active' : ''}`}
               onClick={() => onSelectQuery(item.id)}
               title={item.query}
+              style={{ position: 'relative', display: 'block', width: '100%' }}
             >
-              <span className="history-query">{item.query}</span>
-              <span className="history-time">
-                {new Date(item.timestamp).toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+              <div style={{ paddingRight: '20px' }}>
+                <span className="history-query">{item.query}</span>
+                <span className="history-time">
+                  {new Date(item.timestamp).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              </div>
+              <span
+                className="history-item-delete"
+                onClick={(e) => handleDelete(e, item.id)}
+                title="Delete this conversation"
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: '8px',
+                  fontSize: '16px',
+                  lineHeight: '1',
+                  color: '#94a3b8',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
+                onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                ×
               </span>
             </button>
           ))}

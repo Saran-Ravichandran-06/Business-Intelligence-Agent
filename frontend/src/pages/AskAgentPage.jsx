@@ -218,6 +218,17 @@ function AskAgentPage() {
     }
   }
 
+  const handleDeleteQuery = (idToDelete) => {
+    localStorage.removeItem(`agent_response_${idToDelete}`)
+    setHistory(prev => {
+      const newHistory = prev.filter(h => h.id !== idToDelete)
+      if (selectedId === idToDelete) {
+        setSelectedId(newHistory.length > 0 ? newHistory[0].id : null)
+      }
+      return newHistory
+    })
+  }
+
   const visualizationRows = getChartRows(selectedResponse?.visualization_data)
   const chartType = selectedResponse?.visualization_data?.chart_type
   const analyticsResults = selectedResponse?.analytics_results
@@ -274,6 +285,7 @@ function AskAgentPage() {
             selectedId={selectedId}
             onSelectQuery={setSelectedId}
             onClearHistory={handleClearHistory}
+            onDeleteQuery={handleDeleteQuery}
           />
           <button 
             className="sidebar-toggle-btn"

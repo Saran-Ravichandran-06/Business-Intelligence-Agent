@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import ReportBuilder from '../components/ReportBuilder'
 import ReportPreview from '../components/ReportPreview'
 import { generateReport } from '../services/api'
@@ -17,24 +17,62 @@ function ReportsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const selected = useMemo(
-    () => history.find((r) => r.id === selectedId) || history[0] || null,
-    [history, selectedId],
-  )
+  const [selectedResponse, setSelectedResponse] = useState(null)
+
+  useEffect(() => {
+    const activeId = selectedId || (history.length > 0 ? history[0].id : null)
+    if (!activeId) {
+      setSelectedResponse(null)
+      return
+    }
+
+    if (!selectedId && history.length > 0) {
+      setSelectedId(activeId)
+    }
+
+    try {
+      const cached = localStorage.getItem(`report_response_${activeId}`)
+      if (cached) {
+        setSelectedResponse(JSON.parse(cached))
+      } else {
+        setSelectedResponse(null)
+      }
+    } catch (err) {
+      console.error(err)
+      localStorage.removeItem(`report_response_${activeId}`)
+      setSelectedResponse(null)
+    }
+  }, [selectedId, history, setSelectedId])
+
+  const handleDeleteReport = (e, idToDelete) => {
+    e.stopPropagation()
+    if (confirm('Delete this report?')) {
+      localStorage.removeItem(`report_response_${idToDelete}`)
+      setHistory(prev => {
+        const newHistory = prev.filter(h => h.id !== idToDelete)
+        if (selectedId === idToDelete) {
+          setSelectedId(newHistory.length > 0 ? newHistory[0].id : null)
+        }
+        return newHistory
+      })
+    }
+  }
+
 
   const onGenerate = async (options) => {
     setIsLoading(true)
     setError('')
     try {
       const report = await generateReport(reportType, options)
-      const item = { 
-        id: crypto.randomUUID(), 
-        type: reportType,
-        generatedAt: Date.now(),
-        ...report 
-      }
-      setHistory((prev) => [item, ...prev])
-      setSelectedId(item.id)
+      const id = crypto.randomUUID()
+      const generatedAt = Date.now()
+      
+      const responseToSave = { id, type: reportType, generatedAt, ...report }
+      localStorage.setItem(`report_response_${id}`, JSON.stringify(responseToSave))
+
+      const historyItem = { id, type: reportType, generatedAt }
+      setHistory((prev) => [historyItem, ...prev])
+      setSelectedId(id)
       setIsHistoryOpen(false)
     } catch (err) {
       setError(err?.message || 'Failed to generate report.')
@@ -99,6 +137,7 @@ function ReportsPage() {
                             setSelectedId(item.id)
                             setIsHistoryOpen(false)
                           }}
+                          style={{ position: 'relative', paddingRight: '40px' }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                             <h4 className="item-title" style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>{typeLabel}</h4>
@@ -107,6 +146,31 @@ function ReportsPage() {
                             </span>
                           </div>
                           <p className="item-date" style={{ margin: 0 }}>Generated: {dateStr} • {timeStr}</p>
+                          
+                          <span
+                            className="history-item-delete"
+                            onClick={(e) => handleDeleteReport(e, item.id)}
+                            title="Delete this report"
+                            style={{
+                              position: 'absolute',
+                              top: '12px',
+                              right: '12px',
+                              fontSize: '18px',
+                              lineHeight: '1',
+                              color: '#94a3b8',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: 'transparent',
+                              border: 'none',
+                              cursor: 'pointer'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
+                            onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+                          >
+                            ×
+                          </span>
                         </div>
                       )
                     })}
@@ -115,7 +179,7 @@ function ReportsPage() {
               )}
             </div>
           ) : (
-            <ReportPreview report={selected} isLoading={isLoading} />
+            <ReportPreview report={selectedResponse} isLoading={isLoading} />
           )}
         </div>
       </div>
