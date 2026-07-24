@@ -147,6 +147,7 @@ def _detect_entity_columns(df: pd.DataFrame) -> tuple[str | None, str | None]:
 
 
 def analyze(task: dict[str, Any]) -> AnalyzeResponse:
+    from backend.agent.models import AnalyticsResult
     try:
         operation = str(task.get("operation") or "unknown").lower()
         metric_request = task.get("metric")
@@ -161,11 +162,7 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
         dataset_path = load_latest_dataset_path()
         df = pd.read_csv(dataset_path)
         if df.empty:
-            return AnalyzeResponse(
-                analysis_type="unknown", # type: ignore
-                results=None,
-                error="Dataset is empty; cannot compute analytics.",
-            )
+            return AnalyzeResponse(analysis_type="unknown", results=None, error="Dataset is empty; cannot compute analytics.") # type: ignore
 
         date_col = _detect_date_column(df)
         metric_col, _metric_kind = _detect_metric_column(df, metric_request)
@@ -181,13 +178,17 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
             return AnalyzeResponse(analysis_type="unknown", results=None, error="Unsupported operation.") # type: ignore
 
         if operation == "trend":
-            result = compute_revenue_trend(df, metric_col=metric_col, date_col=date_col)
-            return AnalyzeResponse(analysis_type="trend", results=result, error=None) # type: ignore
+            raw_res = compute_revenue_trend(df, metric_col=metric_col, date_col=date_col)
+            periods = raw_res.get("periods", [])
+            values = raw_res.get("monthly_values", [])
+            dist = [{"label": str(p), "value": float(v)} for p, v in zip(periods, values)]
+            summary = {"trend_direction": raw_res.get("trend_direction"), "metric_label": _metric_kind}
+            res = AnalyticsResult(summary=summary, distribution=dist)
+            return AnalyzeResponse(analysis_type="trend", results=res, error=None) # type: ignore
 
         if operation == "comparison":
             entity_a, entity_b = entities[0], entities[1]
 
-            # Choose entity column based on availability.
             entity_col = None
             for candidate_col in [region_col, product_col]:
                 if candidate_col:
@@ -198,16 +199,20 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
             if entity_col is None:
                 entity_col = region_col or product_col
             if entity_col is None:
-                return AnalyzeResponse(
-                    analysis_type="comparison", # type: ignore
-                    results=None,
-                    error="No entity column (Region/Product) found for comparison analysis.",
-                )
+                return AnalyzeResponse(analysis_type="comparison", results=None, error="No entity column found.") # type: ignore
 
-            result = compute_comparison(
-                df, metric_col=metric_col, entity_col=entity_col, entity_a=entity_a, entity_b=entity_b
-            )
-            return AnalyzeResponse(analysis_type="comparison", results=result, error=None) # type: ignore
+            raw_res = compute_comparison(df, metric_col=metric_col, entity_col=entity_col, entity_a=entity_a, entity_b=entity_b)
+            dist = [
+                {"label": raw_res["entity_a"], "value": raw_res["value_a"]},
+                {"label": raw_res["entity_b"], "value": raw_res["value_b"]}
+            ]
+            summary = {
+                "difference": raw_res.get("difference"),
+                "percent_difference": raw_res.get("percent_difference"),
+                "metric_label": _metric_kind
+            }
+            res = AnalyticsResult(summary=summary, distribution=dist)
+            return AnalyzeResponse(analysis_type="comparison", results=res, error=None) # type: ignore
 
         if operation == "diagnostic":
             month, year = _parse_month_reference(time_period)
@@ -220,16 +225,15 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
             cur_key = _month_key_for_year_month(year, month)
             prev_key = _month_key_for_year_month(prev_year, prev_month)
 
-            if year is None:
-                current_value = _monthly_sum_for_period(df, date_col=date_col, metric_col=metric_col, month=month, year=None)
-                previous_value = _monthly_sum_for_period(df, date_col=date_col, metric_col=metric_col, month=prev_month, year=None)
-                change_percent = None if previous_value == 0 else ((current_value - previous_value) / previous_value) * 100.0
+            current_value = _monthly_sum_for_period(df, date_col=date_col, metric_col=metric_col, month=month, year=year)
+            previous_value = _monthly_sum_for_period(df, date_col=date_col, metric_col=metric_col, month=prev_month, year=prev_year)
+            change_percent = None if previous_value == 0 else ((current_value - previous_value) / previous_value) * 100.0
 
-                top_contributor = None
-                most_affected_region = None
-                most_affected_product = None
-                
-                if region_col:
+            most_affected_region = None
+            most_affected_product = None
+
+            if region_col:
+                if year is None:
                     tmp = df.copy()
                     tmp["_date"] = _coerce_datetime_series(tmp, date_col)
                     tmp["_metric"] = _coerce_numeric_series(tmp, metric_col)
@@ -241,8 +245,12 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
                     diff = (cur_group - prev_group).fillna(0.0)
                     if not diff.empty:
                         most_affected_region = str(diff.abs().sort_values(ascending=False).index[0])
+                else:
+                    region_result = compute_diagnostic(df, metric_col=metric_col, date_col=date_col, current_month_key=cur_key, previous_month_key=prev_key, contributor_col=region_col)
+                    most_affected_region = region_result.get("top_contributor")
 
-                if product_col:
+            if product_col:
+                if year is None:
                     tmp = df.copy()
                     tmp["_date"] = _coerce_datetime_series(tmp, date_col)
                     tmp["_metric"] = _coerce_numeric_series(tmp, metric_col)
@@ -254,57 +262,44 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
                     diff = (cur_group - prev_group).fillna(0.0)
                     if not diff.empty:
                         most_affected_product = str(diff.abs().sort_values(ascending=False).index[0])
-
-                top_contributor = most_affected_region or most_affected_product
-                return AnalyzeResponse(
-                    analysis_type="diagnostic", # type: ignore
-                    results={
-                        "current_value": current_value,
-                        "previous_value": previous_value,
-                        "change_percent": change_percent,
-                        "top_contributor": top_contributor,
-                        "most_affected_region": most_affected_region,
-                        "most_affected_product": most_affected_product,
-                    },
-                    error=None,
-                )
-
-            current_value = _monthly_sum_for_period(df, date_col=date_col, metric_col=metric_col, month=month, year=year)
-            previous_value = _monthly_sum_for_period(df, date_col=date_col, metric_col=metric_col, month=prev_month, year=prev_year)
-            change_percent = None if previous_value == 0 else ((current_value - previous_value) / previous_value) * 100.0
-
-            most_affected_region = None
-            most_affected_product = None
-
-            if region_col:
-                region_result = compute_diagnostic(df, metric_col=metric_col, date_col=date_col, current_month_key=cur_key, previous_month_key=prev_key, contributor_col=region_col)
-                most_affected_region = region_result.get("top_contributor")
-
-            if product_col:
-                product_result = compute_diagnostic(df, metric_col=metric_col, date_col=date_col, current_month_key=cur_key, previous_month_key=prev_key, contributor_col=product_col)
-                most_affected_product = product_result.get("top_contributor")
+                else:
+                    product_result = compute_diagnostic(df, metric_col=metric_col, date_col=date_col, current_month_key=cur_key, previous_month_key=prev_key, contributor_col=product_col)
+                    most_affected_product = product_result.get("top_contributor")
 
             top_contributor = most_affected_region or most_affected_product
 
-            return AnalyzeResponse(
-                analysis_type="diagnostic", # type: ignore
-                results={
-                    "current_value": current_value,
-                    "previous_value": previous_value,
-                    "change_percent": change_percent,
-                    "top_contributor": top_contributor,
-                    "most_affected_region": most_affected_region,
-                    "most_affected_product": most_affected_product,
-                },
-                error=None,
-            )
+            summary = {
+                "change_percent": change_percent,
+                "top_contributor": top_contributor,
+                "most_affected_region": most_affected_region,
+                "most_affected_product": most_affected_product,
+                "metric_label": _metric_kind
+            }
+            dist = [
+                {"label": "Previous", "value": previous_value},
+                {"label": "Current", "value": current_value}
+            ]
+            res = AnalyticsResult(summary=summary, distribution=dist)
+            return AnalyzeResponse(analysis_type="diagnostic", results=res, error=None) # type: ignore
 
         if operation == "forecast":
             try:
-                result = compute_forecast(df, metric_col=metric_col, date_col=date_col)
+                raw_res = compute_forecast(df, metric_col=metric_col, date_col=date_col)
             except Exception as exc:
                 return AnalyzeResponse(analysis_type="forecast", results=None, error=str(exc) or "Forecast failed.") # type: ignore
-            return AnalyzeResponse(analysis_type="forecast", results=result, error=None) # type: ignore
+            
+            dist = []
+            for p, v in zip(raw_res.get("periods_used", []), raw_res.get("historical_revenue", [])):
+                dist.append({"label": str(p), "value": float(v)})
+            dist.append({"label": str(raw_res.get("forecast_period", "predicted")), "value": float(raw_res.get("predicted_revenue", 0))})
+
+            summary = {
+                "predicted_value": raw_res.get("predicted_revenue"),
+                "forecast_period": raw_res.get("forecast_period"),
+                "metric_label": _metric_kind
+            }
+            res = AnalyticsResult(summary=summary, distribution=dist)
+            return AnalyzeResponse(analysis_type="forecast", results=res, error=None) # type: ignore
 
         if operation in ("ranking", "group_by", "lookup"):
             dim_col = _get_dim_col(dimension) if dimension else None
@@ -321,11 +316,7 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
                 dim_col = product_col or region_col
 
             if not dim_col:
-                return AnalyzeResponse(
-                    analysis_type=operation, # type: ignore
-                    results=None,
-                    error="No entity column found for analysis."
-                )
+                return AnalyzeResponse(analysis_type=operation, results=None, error="No entity column found for analysis.") # type: ignore
 
             tmp = df.copy()
             tmp["_metric"] = _coerce_numeric_series(tmp, metric_col)
@@ -345,17 +336,27 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
                 grouped = grouped.head(limit)
             
             if grouped.empty:
-                return AnalyzeResponse(
-                    analysis_type=operation, # type: ignore
-                    results=None,
-                    error="No data available."
-                )
+                return AnalyzeResponse(analysis_type=operation, results=None, error="No data available.") # type: ignore
                 
-            top_entity = str(grouped.index[0])
-            top_value = float(grouped.iloc[0])
+            dist = []
+            for idx, val in grouped.items():
+                dist.append({"label": str(idx), "value": float(val)})
             
-            results = {"top_entity": top_entity, metric_request or _metric_kind: top_value}
-            return AnalyzeResponse(analysis_type=operation, results=results, error=None) # type: ignore
+            summary = {
+                "top_entity": dist[0]["label"],
+                "top_value": dist[0]["value"],
+                "total": float(grouped.sum()),
+                "count": len(dist),
+                "metric_label": metric_request or _metric_kind,
+                "dimension_label": dim_col
+            }
+            
+            if operation == "ranking":
+                for i, d in enumerate(dist):
+                    d["rank"] = i + 1
+
+            res = AnalyticsResult(summary=summary, distribution=dist)
+            return AnalyzeResponse(analysis_type=operation, results=res, error=None) # type: ignore
 
         return AnalyzeResponse(analysis_type="unknown", results=None, error="Unsupported analysis_type.") # type: ignore
 

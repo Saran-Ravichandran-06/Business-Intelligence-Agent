@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import logging
 import re
 from typing import Any
@@ -21,6 +22,17 @@ def _normalize_dimension(text: str | None) -> str | None:
 def _normalize_comparison_entities(text: str | None) -> list[str] | None:
     if not text:
         return None
+
+    # Handle stringified lists from LLM (e.g. "['Product A', 'Product B']")
+    text_stripped = text.strip()
+    if text_stripped.startswith("[") and text_stripped.endswith("]"):
+        try:
+            parsed = ast.literal_eval(text_stripped)
+            if isinstance(parsed, list) and len(parsed) >= 2:
+                return [str(parsed[0]).strip(), str(parsed[1]).strip()]
+        except (ValueError, SyntaxError):
+            pass
+
     # Support "North and South", "North vs South", "North vs. South", "North versus South"
     parts = re.split(r"\s+(and|&|vs\.?|versus)\s+|,", text, flags=re.IGNORECASE)
     separators = {"and", "&", "vs", "vs.", "versus"}
@@ -42,17 +54,19 @@ def normalize(intent: AnalyzeQueryResponse) -> BusinessRequest:
     time_period = intent.time_period
     raw_target = intent.comparison_target
 
-    if isinstance(raw_target, list):
-        raw_target = " and ".join(raw_target)
-
     dimension = None
     entities = None
     filters = None
     limit = None
     sort = None
 
+    if isinstance(raw_target, list):
+        entities = raw_target
+        raw_target = " and ".join(raw_target)
+
     if operation == "comparison":
-        entities = _normalize_comparison_entities(raw_target)
+        if not entities:
+            entities = _normalize_comparison_entities(raw_target)
         if not entities or len(entities) != 2:
             raise ValueError(f"Comparison operation requires exactly two entities. Found: {entities}")
 

@@ -16,63 +16,38 @@ def _build_visualization_data(analysis_type: str, results: dict[str, Any] | None
     if not results:
         return {}
 
-    if analysis_type == "trend":
-        labels = results.get("periods", [])
-        values = results.get("monthly_values", [])
+    dist = results.get("distribution", [])
+    summary = results.get("summary", {})
+    metric_label = summary.get("metric_label", "Value").replace("_", " ").title()
+
+    if not dist:
+        return {}
+
+    labels = [str(d.get("label", "")) for d in dist]
+    values = [d.get("value") for d in dist]
+
+    if analysis_type in ("trend", "forecast"):
         return {
             "chart_type": "line",
-            "title": "Revenue Trend",
+            "title": f"{metric_label} {analysis_type.title()}",
             "labels": labels,
-            "datasets": [{"label": "Value", "values": values}],
+            "datasets": [{"label": metric_label, "values": values}],
         }
+    
+    title = f"{metric_label} Distribution"
+    if analysis_type == "ranking":
+        title = f"Top {metric_label}"
+    elif analysis_type == "comparison":
+        title = f"Comparison of {metric_label}"
+    elif analysis_type == "diagnostic":
+        title = f"Diagnostic Change in {metric_label}"
 
-    if analysis_type == "comparison":
-        labels = [results.get("entity_a"), results.get("entity_b")]
-        values = [results.get("value_a"), results.get("value_b")]
-        return {
-            "chart_type": "bar",
-            "title": "Comparison",
-            "labels": labels,
-            "datasets": [{"label": "Value", "values": values}],
-        }
-
-    if analysis_type == "diagnostic":
-        labels = ["Previous", "Current"]
-        values = [results.get("previous_value"), results.get("current_value")]
-        return {
-            "chart_type": "bar",
-            "title": "Diagnostic Change",
-            "labels": labels,
-            "datasets": [{"label": "Metric Value", "values": values}],
-        }
-
-    if analysis_type == "forecast":
-        periods = list(results.get("periods_used", []))
-        values = []
-        # Forecast module returns only predicted value; show prediction point.
-        predicted = results.get("predicted_revenue")
-        if predicted is not None:
-            periods.append(results.get("forecast_period", "next_period"))
-            values = [None] * (len(periods) - 1) + [predicted]
-        return {
-            "chart_type": "line",
-            "title": "Forecast",
-            "labels": periods,
-            "datasets": [{"label": "Predicted Value", "values": values}],
-        }
-
-    if analysis_type in ("ranking", "group_by", "lookup"):
-        top_entity = results.get("top_region") or results.get("top_product") or results.get("top_entity") or "Top"
-        metric_key = next((k for k in results if k not in ("top_region", "top_product", "top_entity")), "value")
-        metric_val = results.get(metric_key, 0)
-        return {
-            "chart_type": "bar",
-            "title": f"Top {metric_key.replace('_', ' ').title()}" if analysis_type == "ranking" else f"{metric_key.replace('_', ' ').title()} by {top_entity}",
-            "labels": [top_entity],
-            "datasets": [{"label": metric_key.replace("_", " ").title(), "values": [metric_val]}],
-        }
-
-    return {}
+    return {
+        "chart_type": "bar",
+        "title": title,
+        "labels": labels,
+        "datasets": [{"label": metric_label, "values": values}],
+    }
 
 
 def run_agent_query_pipeline(query: str) -> AgentQueryResponse:
@@ -106,18 +81,18 @@ def run_agent_query_pipeline(query: str) -> AgentQueryResponse:
             error=analysis.error,
         )
 
-    results = analysis.results or {}
-    logger.info("Pipeline Step - Analytics Output: %s", results)
-    visualization_data = _build_visualization_data(business_request.operation, results)
+    results_dict = analysis.results.model_dump() if analysis.results else {}
+    logger.info("Pipeline Step - Analytics Output: %s", results_dict)
+    visualization_data = _build_visualization_data(business_request.operation, results_dict)
 
     try:
-        insight = generate_insight(business_request.operation, results)
+        insight = generate_insight(business_request.operation, results_dict)
         logger.info("Pipeline Step - Generated Insight: %s", insight)
     except InsightGenerationError as exc:
         logger.error("Pipeline Error - Insight generation failed: %s", exc)
         return AgentQueryResponse(
             query_analysis=task,
-            analytics_results=results,
+            analytics_results=results_dict,
             insight=None,
             visualization_data=visualization_data,
             error=str(exc),
@@ -125,7 +100,7 @@ def run_agent_query_pipeline(query: str) -> AgentQueryResponse:
 
     return AgentQueryResponse(
         query_analysis=task,
-        analytics_results=results,
+        analytics_results=results_dict,
         insight=insight,
         visualization_data=visualization_data,
         error=None,

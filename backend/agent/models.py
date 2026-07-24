@@ -56,9 +56,14 @@ class BusinessRequest(BaseModel):
     limit: int | None = None
 
 
+class AnalyticsResult(BaseModel):
+    summary: dict[str, Any] = Field(default_factory=dict)
+    distribution: list[dict[str, Any]] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
 class AnalyzeResponse(BaseModel):
     analysis_type: SupportedAnalysisType
-    results: dict[str, Any] | None = None
+    results: AnalyticsResult | None = None
     error: str | None = None
 
 
