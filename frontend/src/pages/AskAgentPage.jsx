@@ -65,67 +65,83 @@ function getChartRows(visualizationData) {
   return labels.map((label, i) => ({ label, value: values[i] }))
 }
 
-function buildMetricsFromAnalytics(analyticsResults) {
-  if (!analyticsResults) return []
+function buildMetricsFromAnalytics(analyticsResults, analysisType) {
+  if (!analyticsResults || !analyticsResults.summary) return []
   
-  return Object.entries(analyticsResults).slice(0, 4).map(([key, value]) => {
-    const label = key.replace(/_/g, ' ')
-    let formattedValue = value;
-    
-    if (label.toLowerCase() === 'periods') {
-      let parts = [];
-      if (typeof value === 'string') {
-        parts = value.split(',').map(s => s.trim());
-      } else if (Array.isArray(value)) {
-        parts = value;
-      }
-      if (parts.length > 1) {
-        const formatMonth = (str) => {
-          const [yyyy, mm] = String(str).split('-');
-          if (yyyy && mm) {
-            const date = new Date(parseInt(yyyy), parseInt(mm) - 1);
-            const monthStr = date.toLocaleDateString('en-US', { month: 'short' });
-            return `01 ${monthStr} ${yyyy.substring(2)}`;
-          }
-          return str;
-        }
-        formattedValue = `${formatMonth(parts[0])} – ${formatMonth(parts[parts.length - 1])}`;
-      } else if (parts.length === 1) {
-        formattedValue = parts[0];
-      } else {
-        formattedValue = formatValue(value);
-      }
-    } else if (label.toLowerCase() === 'monthly values') {
-       let arr = [];
-       if (typeof value === 'string') {
-          // It could be a json string or comma-separated numbers
-          try {
-            const parsed = JSON.parse(value);
-            arr = Array.isArray(parsed) ? parsed : Object.values(parsed);
-          } catch(e) {
-            arr = value.split(',').map(s => Number(s.trim()));
-          }
-       } else if (typeof value === 'object') {
-          arr = Array.isArray(value) ? value : Object.values(value);
-       }
-       
-       arr = arr.map(n => Number(n)).filter(n => !isNaN(n));
-       if (arr.length > 0) {
-          const min = Math.min(...arr);
-          const max = Math.max(...arr);
-          formattedValue = `₹${formatNumberShort(min)} – ₹${formatNumberShort(max)}`;
-       } else {
-          formattedValue = formatValue(value);
-       }
-    } else {
-      formattedValue = formatValue(value);
+  const summary = analyticsResults.summary || {}
+  const dist = analyticsResults.distribution || []
+  
+  const formatMetric = (val, isPercentage = false, isCurrency = true) => {
+    if (val === null || val === undefined) return 'N/A'
+    if (isPercentage) return `${Number(val).toFixed(1)}%`
+    if (typeof val === 'number') {
+        const str = formatNumberShort(val)
+        return isCurrency ? `₹${str}` : str
     }
+    return String(val)
+  }
 
-    return {
-      label,
-      value: formattedValue,
-    }
-  })
+  const capitalize = (s) => (s || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+
+  const metrics = []
+  
+  switch(analysisType) {
+    case 'group_by':
+      metrics.push({ label: 'Top ' + capitalize(summary.dimension_label || 'Category'), value: summary.top_entity || 'N/A' })
+      metrics.push({ label: capitalize(summary.metric_label || 'Revenue'), value: formatMetric(summary.top_value) })
+      metrics.push({ label: 'Total', value: formatMetric(summary.total) })
+      metrics.push({ label: 'Categories', value: formatMetric(summary.count, false, false) })
+      break;
+    case 'comparison':
+      const diff = summary.difference
+      const diffPct = summary.percent_difference
+      const a = dist.length > 0 ? dist[0] : {}
+      const b = dist.length > 1 ? dist[1] : {}
+      if (a.label) metrics.push({ label: a.label, value: formatMetric(a.value) })
+      if (b.label) metrics.push({ label: b.label, value: formatMetric(b.value) })
+      metrics.push({ label: 'Difference', value: formatMetric(Math.abs(diff || 0)) })
+      metrics.push({ label: 'Difference %', value: formatMetric(diffPct, true) })
+      break;
+    case 'lookup':
+      metrics.push({ label: capitalize(summary.dimension_label || 'Entity'), value: summary.top_entity || 'N/A' })
+      metrics.push({ label: capitalize(summary.metric_label || 'Revenue'), value: formatMetric(summary.top_value) })
+      metrics.push({ label: 'Total Matches', value: formatMetric(summary.count, false, false) })
+      break;
+    case 'ranking':
+      metrics.push({ label: 'Rank #1', value: summary.top_entity || 'N/A' })
+      metrics.push({ label: capitalize(summary.metric_label || 'Revenue'), value: formatMetric(summary.top_value) })
+      metrics.push({ label: 'Share %', value: formatMetric(summary.total ? (summary.top_value / summary.total) * 100 : 0, true) })
+      metrics.push({ label: 'Total', value: formatMetric(summary.total) })
+      break;
+    case 'trend':
+      const current = dist.length > 0 ? dist[dist.length - 1].value : 0
+      const prev = dist.length > 1 ? dist[dist.length - 2].value : 0
+      const growth = current - prev
+      const changePct = prev ? (growth / prev) * 100 : 0
+      metrics.push({ label: 'Current', value: formatMetric(current) })
+      metrics.push({ label: 'Previous', value: formatMetric(prev) })
+      metrics.push({ label: 'Growth', value: formatMetric(growth) })
+      metrics.push({ label: 'Change %', value: formatMetric(changePct, true) })
+      break;
+    case 'forecast':
+      metrics.push({ label: 'Forecast', value: summary.forecast_period || 'N/A' })
+      metrics.push({ label: 'Expected', value: formatMetric(summary.predicted_value) })
+      const lastHist = dist.length > 1 ? dist[dist.length - 2].value : 0
+      const fGrowth = (summary.predicted_value || 0) - lastHist
+      metrics.push({ label: 'Growth', value: formatMetric(fGrowth) })
+      break;
+    case 'diagnostic':
+      metrics.push({ label: 'Root Cause', value: summary.top_contributor || 'N/A' })
+      metrics.push({ label: 'Impact', value: formatMetric(summary.change_percent, true) })
+      metrics.push({ label: 'Category', value: summary.most_affected_region ? 'Region' : (summary.most_affected_product ? 'Product' : 'Unknown') })
+      break;
+    default:
+      if (summary.top_entity) metrics.push({ label: 'Top Entity', value: summary.top_entity })
+      if (summary.total) metrics.push({ label: 'Total', value: formatMetric(summary.total) })
+      break;
+  }
+  
+  return metrics.slice(0, 4)
 }
 
 import { useAppContext } from '../context/AppContext'
@@ -232,7 +248,8 @@ function AskAgentPage() {
   const visualizationRows = getChartRows(selectedResponse?.visualization_data)
   const chartType = selectedResponse?.visualization_data?.chart_type
   const analyticsResults = selectedResponse?.analytics_results
-  const metrics = buildMetricsFromAnalytics(analyticsResults)
+  const analysisType = selectedResponse?.query_analysis?.analysis_type || 'unknown'
+  const metrics = buildMetricsFromAnalytics(analyticsResults, analysisType)
 
   const renderChart = () => {
     if (visualizationRows.length === 0) return null
