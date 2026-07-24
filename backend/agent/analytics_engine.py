@@ -193,23 +193,13 @@ def analyze(task: dict[str, Any]) -> AnalyzeResponse:
                     error="comparison_target is required for comparison analysis.",
                 )
 
-            # Parse two entities from comparison_target (best-effort).
-            text = str(comparison_target).strip()
-            # Prefer split by ' and ', ' & ', ' vs ', ','.
-            parts = re.split(r"\s+(and|&|vs|versus)\s+|,", text, flags=re.IGNORECASE)
-            parts = [p.strip() for p in parts if p and p.strip() and p.strip().lower() not in {"and", "&", "vs", "versus"}]
-            if len(parts) < 2:
-                # Fallback: pick first two tokens.
-                tokens = [t.strip() for t in re.split(r"[;,]", text) if t.strip()]
-                if len(tokens) >= 2:
-                    entity_a, entity_b = tokens[0], tokens[1]
-                else:
-                    return AnalyzeResponse(
-                        analysis_type="comparison",
-                        results=None,
-                        error="Unable to extract two comparison entities.",
-                    )
-            entity_a, entity_b = parts[0], parts[1]
+            if not isinstance(comparison_target, list) or len(comparison_target) < 2:
+                return AnalyzeResponse(
+                    analysis_type="comparison",
+                    results=None,
+                    error="comparison_target must be a list of two entities.",
+                )
+            entity_a, entity_b = comparison_target[0], comparison_target[1]
 
             # Choose entity column based on availability.
             entity_col = None

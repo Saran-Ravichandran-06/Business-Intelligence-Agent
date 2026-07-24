@@ -27,14 +27,6 @@ def _normalize_text(text: str) -> str:
     return cleaned
 
 
-def _numbers_from_text(text: str) -> set[str]:
-    return set(re.findall(r"-?\d+(?:\.\d+)?", text))
-
-
-def _numbers_from_results(results: dict[str, Any]) -> set[str]:
-    blob = json.dumps(results, ensure_ascii=False)
-    return set(re.findall(r"-?\d+(?:\.\d+)?", blob))
-
 
 def _format_currency(val: float | None) -> str:
     if val is None:
