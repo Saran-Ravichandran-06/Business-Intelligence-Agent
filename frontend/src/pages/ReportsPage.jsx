@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import ReportBuilder from '../components/ReportBuilder'
 import ReportPreview from '../components/ReportPreview'
-import { generateReport, getReportDownloadPdfUrl, getReportDownloadCsvUrl } from '../services/api'
+import { generateReport } from '../services/api'
 
 import { useAppContext } from '../context/AppContext'
 
@@ -43,15 +43,7 @@ function ReportsPage() {
     }
   }
 
-  const handleDownloadPdf = () => {
-    const url = getReportDownloadPdfUrl()
-    window.open(url, '_blank')
-  }
 
-  const handleDownloadCsv = () => {
-    const url = getReportDownloadCsvUrl()
-    window.open(url, '_blank')
-  }
 
   return (
     <section className="reports-center">

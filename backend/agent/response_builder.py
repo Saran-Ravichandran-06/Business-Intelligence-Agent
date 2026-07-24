@@ -79,8 +79,11 @@ def run_agent_query_pipeline(query: str) -> AgentQueryResponse:
     try:
         task = analyze_query_via_ollama(query)
         logger.info("Pipeline Step - Parsed JSON: %s", task.model_dump())
+    except ValueError as exc:
+        logger.error("Pipeline Error - Validation/Parsing failed: %s", exc)
+        return AgentQueryResponse(error=str(exc))
     except RuntimeError as exc:
-        logger.error("Pipeline Error - Parsing failed: %s", exc)
+        logger.error("Pipeline Error - LLM request failed: %s", exc)
         return AgentQueryResponse(error=str(exc))
 
     logger.info("Pipeline Step - Routed Analysis Type: %s", task.analysis_type)
