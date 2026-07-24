@@ -12,7 +12,7 @@ import httpx
 from backend.agent.models import AnalyzeQueryResponse, SupportedAnalysisType
 
 
-SUPPORTED_TYPES: set[str] = {"trend", "comparison", "diagnostic", "forecast", "ranking", "unknown"}
+SUPPORTED_TYPES: set[str] = {"trend", "comparison", "diagnostic", "forecast", "ranking", "group_by", "lookup", "unknown"}
 logger = logging.getLogger(__name__)
 
 
@@ -25,23 +25,7 @@ def _normalize_string(value: Any) -> str | None:
     return str(value).strip() or None
 
 
-def _normalize_comparison_entities(text: str | None) -> list[str] | None:
-    if not text:
-        return None
-    # Support "North and South", "North vs South", "North vs. South", "North versus South"
-    parts = re.split(r"\s+(and|&|vs\.?|versus)\s+|,", text, flags=re.IGNORECASE)
-    separators = {"and", "&", "vs", "vs.", "versus"}
-    cleaned_parts = [p.strip() for p in parts if p and p.strip() and p.strip().lower() not in separators]
-    
-    if len(cleaned_parts) >= 2:
-        return [cleaned_parts[0], cleaned_parts[1]]
-    
-    # Fallback to simple split
-    tokens = [t.strip() for t in re.split(r"[;,]", text) if t.strip()]
-    if len(tokens) >= 2:
-        return [tokens[0], tokens[1]]
-        
-    return None
+
 
 
 def _validate_and_normalize(payload: dict[str, Any]) -> AnalyzeQueryResponse:
@@ -61,20 +45,11 @@ def _validate_and_normalize(payload: dict[str, Any]) -> AnalyzeQueryResponse:
         if val is not None and not isinstance(val, str):
             raise ValueError(f"Field {field} must be a string or null")
 
-    normalized_comparison_target: list[str] | str | None = comparison_target_raw
-    if analysis_type == "comparison":
-        logger.info("Raw comparison_target received: %s", comparison_target_raw)
-        normalized_entities = _normalize_comparison_entities(comparison_target_raw)
-        if not normalized_entities:
-            raise ValueError("Unable to extract two comparison entities from comparison_target.")
-        normalized_comparison_target = normalized_entities
-        logger.info("Normalized entities for comparison: %s", normalized_comparison_target)
-
     return AnalyzeQueryResponse(
         analysis_type=analysis_type,  # type: ignore[arg-type]
         metric=metric,
         time_period=time_period,
-        comparison_target=normalized_comparison_target,
+        comparison_target=comparison_target_raw,
     )
 
 
@@ -83,10 +58,10 @@ def _build_prompt(query: str) -> str:
 
 Schema:
 {{
-  "analysis_type": "<trend|comparison|diagnostic|forecast|unknown>",
+  "analysis_type": "<group_by|lookup|trend|comparison|diagnostic|forecast|ranking|unknown>",
   "metric": "<string or null>",
   "time_period": "<string or null>",
-  "comparison_target": "<string or null>"
+  "comparison_target": "<entities, or dimension to group/filter by, or null>"
 }}
 
 User query: {query}

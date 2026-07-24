@@ -10,7 +10,20 @@ SupportedAnalysisType = Literal[
     "diagnostic",
     "forecast",
     "ranking",
+    "group_by",
+    "lookup",
     "unknown",
+]
+
+SupportedOperation = Literal[
+    "group_by",
+    "lookup",
+    "comparison",
+    "ranking",
+    "trend",
+    "forecast",
+    "diagnostic",
+    "unknown"
 ]
 
 
@@ -30,6 +43,17 @@ class AnalyzeRequest(BaseModel):
     metric: str | None = None
     time_period: str | None = None
     comparison_target: list[str] | str | None = None
+
+class BusinessRequest(BaseModel):
+    operation: SupportedOperation
+    metric: str | None = None
+    dimension: str | None = None
+    entities: list[str] | None = None
+    filters: dict[str, str] | None = None
+    time_period: str | None = None
+    aggregation: str | None = None
+    sort: Literal["asc", "desc"] | None = None
+    limit: int | None = None
 
 
 class AnalyzeResponse(BaseModel):
