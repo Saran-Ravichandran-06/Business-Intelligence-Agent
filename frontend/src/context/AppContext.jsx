@@ -19,9 +19,41 @@ export function AppProvider({ children }) {
 
   // Ask Agent State
   const [agentInput, setAgentInput] = useState('');
-  const [agentHistory, setAgentHistory] = useState([]);
-  const [agentSelectedId, setAgentSelectedId] = useState(null);
+  
+  const [agentHistory, setAgentHistory] = useState(() => {
+    try {
+      const stored = localStorage.getItem('agent_history');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [agentSelectedId, setAgentSelectedId] = useState(() => {
+    try {
+      const stored = localStorage.getItem('agent_selected_id');
+      if (stored) return stored;
+      const history = localStorage.getItem('agent_history');
+      const parsed = history ? JSON.parse(history) : [];
+      return parsed.length > 0 ? parsed[0].id : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [agentSidebarOpen, setAgentSidebarOpen] = useState(true);
+
+  React.useEffect(() => {
+    localStorage.setItem('agent_history', JSON.stringify(agentHistory));
+  }, [agentHistory]);
+
+  React.useEffect(() => {
+    if (agentSelectedId) {
+      localStorage.setItem('agent_selected_id', agentSelectedId);
+    } else {
+      localStorage.removeItem('agent_selected_id');
+    }
+  }, [agentSelectedId]);
 
   // Reports State
   const [reportType, setReportType] = useState('monthly');

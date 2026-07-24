@@ -142,10 +142,33 @@ function AskAgentPage() {
   const [error, setError] = useState('')
 
   const canSend = useMemo(() => input.trim().length > 0 && !isLoading, [input, isLoading])
-  const selected = useMemo(
-    () => history.find((h) => h.id === selectedId) || history[0] || null,
-    [history, selectedId],
-  )
+  const [selectedResponse, setSelectedResponse] = useState(null)
+
+  useEffect(() => {
+    const activeId = selectedId || (history.length > 0 ? history[0].id : null)
+    if (!activeId) {
+      setSelectedResponse(null)
+      return
+    }
+    
+    // Auto-select first item if selectedId is null
+    if (!selectedId && history.length > 0) {
+      setSelectedId(activeId)
+    }
+    
+    try {
+      const cached = localStorage.getItem(`agent_response_${activeId}`)
+      if (cached) {
+        setSelectedResponse(JSON.parse(cached))
+      } else {
+        setSelectedResponse({ error: "Response data not found." })
+      }
+    } catch (err) {
+      console.error(err)
+      localStorage.removeItem(`agent_response_${activeId}`)
+      setSelectedResponse({ error: "Corrupted session data. Please submit a new query." })
+    }
+  }, [selectedId, history, setSelectedId])
 
   const submitQuery = async (rawQuery) => {
     const query = rawQuery.trim()
@@ -157,14 +180,20 @@ function AskAgentPage() {
 
     try {
       const response = await runAgentQuery(query)
-      const item = {
-        id: crypto.randomUUID(),
+      const id = crypto.randomUUID()
+      const timestamp = new Date().toISOString()
+      
+      const responseToSave = {
+        id,
         query,
-        timestamp: new Date().toISOString(),
+        timestamp,
         ...response,
       }
-      setHistory((prev) => [item, ...prev])
-      setSelectedId(item.id)
+      localStorage.setItem(`agent_response_${id}`, JSON.stringify(responseToSave))
+      
+      const historyItem = { id, query, timestamp }
+      setHistory((prev) => [historyItem, ...prev])
+      setSelectedId(id)
     } catch (err) {
       setError(err?.message || 'Agent failed to analyze the query.')
     } finally {
@@ -181,15 +210,17 @@ function AskAgentPage() {
 
   const handleClearHistory = () => {
     if (confirm('Clear all conversation history?')) {
+      history.forEach(h => localStorage.removeItem(`agent_response_${h.id}`))
       setHistory([])
       setSelectedId(null)
+      setSelectedResponse(null)
       setError('')
     }
   }
 
-  const visualizationRows = getChartRows(selected?.visualization_data)
-  const chartType = selected?.visualization_data?.chart_type
-  const analyticsResults = selected?.analytics_results
+  const visualizationRows = getChartRows(selectedResponse?.visualization_data)
+  const chartType = selectedResponse?.visualization_data?.chart_type
+  const analyticsResults = selectedResponse?.analytics_results
   const metrics = buildMetricsFromAnalytics(analyticsResults)
 
   const renderChart = () => {
@@ -308,12 +339,12 @@ function AskAgentPage() {
                   />
                 </div>
               </div>
-            ) : selected ? (
+            ) : selectedResponse ? (
               <div className="analysis-response">
-                {selected.error ? (
+                {selectedResponse.error ? (
                   <div className="analysis-error-card">
                     <h3>Analysis Failed</h3>
-                    <p>{selected.error}</p>
+                    <p>{selectedResponse.error}</p>
                   </div>
                 ) : (
                   <>
@@ -321,8 +352,8 @@ function AskAgentPage() {
                     <div className="analysis-section insight-card">
                       <div className="insight-content">
                         <h3>Business Insight</h3>
-                        <p>{selected.insight}</p>
-                        <p className="query-reference">Query: "{selected.query}"</p>
+                        <p>{selectedResponse.insight}</p>
+                        <p className="query-reference">Query: "{selectedResponse.query}"</p>
                       </div>
                     </div>
 
